@@ -30,7 +30,20 @@ def add_user(jail, user, group, gecos):
     
     """
     print("user={}, group={}, gecos={}".format(user, group, gecos))
-    
+    command = ["sudo", "jexec", jail, "pw", "useradd",
+            "-n", user,
+            "-c", gecos,
+            "-g", group,
+            "-G", "wheel",
+            "-m",
+            "-k", "/usr/share/skel",
+            "-s", "/bin/tcsh",
+            "-w", "random"]
+
+    try:
+        subprocess.check_call(command)
+    except subprocess.CalledProcessError:
+        print("Failed to create {}'s user account".format(user))
 
 
 def send_msg():
@@ -64,10 +77,10 @@ if __name__ == '__main__':
     user_names = ["test01", "test02", "test03", "test04"]
     user_gecos = ["test 01", "test 02", "test 03", "test 04"]
   
-    
-#    for g in user_groups:
-#        print("Adding {} as a group.".format(g))
-#        add_group(new_jail, g)
+
+    for g in user_groups:
+        print("Adding {} as a group.".format(g))
+        add_group(new_jail, g)
 
     for user, group, gecos  in zip(user_names, user_groups, user_gecos):
         print("Adding {} as a user.".format(user))
