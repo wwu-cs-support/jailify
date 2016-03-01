@@ -20,16 +20,18 @@ def add_group(jail, group):
         print("Failed to add {} as a group".format(group))
         
 
-def add_user():
+def add_user(jail, user, group, gecos):
     """add_user
     Uses pw adduser to add a user to the system
 
     Args:
 
     Returns:
-        success or failure
+    
     """
-    pass
+    print("user={}, group={}, gecos={}".format(user, group, gecos))
+    
+
 
 def send_msg():
     """send_msg
@@ -59,6 +61,14 @@ if __name__ == '__main__':
     #for testing....
     new_jail = "example"
     user_groups = ["test01", "test02", "test03", "test04"]
-    for g in user_groups:
-        print("{}".format(g))
-        add_group(new_jail, g)
+    user_names = ["test01", "test02", "test03", "test04"]
+    user_gecos = ["test 01", "test 02", "test 03", "test 04"]
+  
+    
+#    for g in user_groups:
+#        print("Adding {} as a group.".format(g))
+#        add_group(new_jail, g)
+
+    for user, group, gecos  in zip(user_names, user_groups, user_gecos):
+        print("Adding {} as a user.".format(user))
+        add_user(new_jail, user, group, gecos)
