@@ -7,6 +7,7 @@ def check_name(jail_name):
     with open('/etc/jail.conf', 'r') as jail_config:
         for line in jail_config:
             if jail_name in line:
+                #print("Error: " + jail_name + " already exists as a jail name")
                 print("Error: {} already exists as a jail name".format(jail_name))
                 return False
     return True
@@ -33,6 +34,7 @@ def create_fstab_file(jail_name):
     fstab_path = path + jail_name 
     fstab_file = open(fstab_path, 'w')
     fstab_file.close()
+    subprocess.call(["touch", path + jail_name]) #create 0 byte file and write nothing in it
 
 def clone_base_jail(snapshot, jail_name):
     print("Cloning base jail")
@@ -51,6 +53,12 @@ def start_jail(jail_name):
     cmd = ["service", "jail", "start", jail_name]
     if(subprocess.run(cmd) == 0):
         print("Error starting jail")
+    subprocess.call(["zfs", "clone", snapshot_path, jail_path])
+
+def start_jail(jail_name):
+    #print("Starting jail")
+    cmd = ["service", "jail", "start", jail_name]
+    subprocess.call(cmd)
 
 if __name__ == '__main__':
     lowest_ip = get_lowest_ip()
