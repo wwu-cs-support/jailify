@@ -45,7 +45,7 @@ def add_user(jail, user, group, gecos):
         print("Failed to create {}'s user account".format(user))
 
 
-def set_account_expiration(jail, user):
+def set_password_expiration(jail, user):
     """set_account_expiration
     Sets the account expiration to 120 days after creation
 
@@ -54,8 +54,15 @@ def set_account_expiration(jail, user):
     Returns:
 
     """
-    expiration = 
-    command = ["sudo", "jexec", jail, "pw", "usermod", "-p", 
+    exp_date = datetime.date.today() + datetime.timedelta(120)
+    exp_date = exp_date.strftime("%m-%b-%Y"))
+    command = ["sudo", "jexec", jail, "pw", "usermod", "-p", exp_date, user]
+    
+    try:
+        subprocess.check_call(command)
+    except: subprocess.CalledProcessError:
+        print("Failed to update {}'s password expiration date".format(user))
+
 
 def send_msg():
     """send_msg
@@ -84,6 +91,7 @@ def drop_keys():
 if __name__ == '__main__':
     #Do stuff
     #for testing....
+    
     new_jail = "example"
     user_groups = ["test01", "test02", "test03", "test04"]
     user_names = ["test01", "test02", "test03", "test04"]
@@ -94,3 +102,5 @@ if __name__ == '__main__':
         add_group(new_jail, group)
         print("Adding {} as a user.".format(user))
         add_user(new_jail, user, group, gecos)
+        print("Setting password expiration date for {}".format(user))
+        set_password_expiration(new_jail, user)
