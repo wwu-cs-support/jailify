@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import sys
+import os.path
 import datetime
 import subprocess
 
@@ -100,7 +101,7 @@ def send_msg():
     pass
 
 
-def build_path(jail_root, jail, home_dir, user):
+def build_path(jail_root, jail, home_dir, user, ssh_dir):
     """build_path_to_auth_keys
     Builds a modifiable path to a users authorized_keys file
     locating in their home directory
@@ -114,11 +115,13 @@ def build_path(jail_root, jail, home_dir, user):
         Path - A successfull path to the authorized_key file
             for a user
     """
-
+    print("{}{}{}{}{}".format(jail_root, jail, home_dir, user, ssh_dir))
+    path = os.path.join(jail_root, jail)
+    print("{}".format(path))
     return path
 
 
-def drop_keys(path_to_key, jail_root, jail, home_dir, user):
+def drop_keys(path_to_key, jail_root, jail, home_dir, user, ssh_dir):
     """drop_keys
     Places public key into authorized_keys inside the .ssh
     folder
@@ -129,29 +132,34 @@ def drop_keys(path_to_key, jail_root, jail, home_dir, user):
     Returns:
         None
     """
-    path_to_auth_keys = build_path(jail_root, jail, home_dir, user)
-    command = ("cat", path_to_key, ">>", path_to_auth_keys)
-    try:
-        subprocess.check_all(command)
-    except subprocess.CalledProcessError as e:
-        sys.exit(e.output)
+    path_to_auth_keys = build_path(jail_root, jail, home_dir, user, ssh_dir)
+    #command = ("cat", path_to_key, ">>", path_to_auth_keys)
+    #try:
+    #    subprocess.check_all(command)
+    #except subprocess.CalledProcessError as e:
+    #    sys.exit(e.output)
 
 
 if __name__ == '__main__':
     #for testing....
 
-    new_jail = "example"
+    jail = "example"
     user_groups = ["test01", "test02", "test03", "test04"]
     user_names = ["test01", "test02", "test03", "test04"]
     user_gecos = ["test 01", "test 02", "test 03", "test 04"]
 
-    
+    key_path = ""
+    jail_root = "/usr/jail/"
+    home_dir = "/usr/home/"
+    ssh_dir = "/.ssh/authorized_keys"
+
+
     
     for user, group, gecos  in zip(user_names, user_groups, user_gecos):
-        print("Adding {} as a group.".format(group))
-        add_group(new_jail, group)
-        print("Adding {} as a user.".format(user))
-        add_user(new_jail, user, group, gecos)
-        print("Setting password expiration date for {}".format(user))
-        set_password_expiration(new_jail, user)
-        drop_keys(key_path, jail_root, jail, home_dir, user)
+    #    print("Adding {} as a group.".format(group))
+    #    add_group(jail, group)
+    #    print("Adding {} as a user.".format(user))
+    #    add_user(jail, user, group, gecos)
+    #    print("Setting password expiration date for {}".format(user))
+    #    set_password_expiration(jail, user)
+        drop_keys(key_path, jail_root, jail, home_dir, user, ssh_dir)
