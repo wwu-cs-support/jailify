@@ -100,20 +100,44 @@ def send_msg():
     pass
 
 
-def drop_keys():
-    """Places public key into authorized_keys inside the .ssh
+def build_path(jail_root, jail, home_dir, user):
+    """build_path_to_auth_keys
+    Builds a modifiable path to a users authorized_keys file
+    locating in their home directory
+
+    Args:
+        Jail_root - Path to where all jails exist
+        Jail - Current jail name we are working in
+        Home_dir - Directory needed to traverse to
+        User - The user who will need authorized key updated
+    Returns:
+        Path - A successfull path to the authorized_key file
+            for a user
+    """
+
+    return path
+
+
+def drop_keys(path_to_key, jail_root, jail, home_dir, user):
+    """drop_keys
+    Places public key into authorized_keys inside the .ssh
     folder
 
     Args:
-        None
-
+        Path_to_key - Path to the location where the pub key lives
+        Path_to_auth_keys - Path to location to drop key
     Returns:
         None
     """
-    pass
+    path_to_auth_keys = build_path(jail_root, jail, home_dir, user)
+    command = ("cat", path_to_key, ">>", path_to_auth_keys)
+    try:
+        subprocess.check_all(command)
+    except subprocess.CalledProcessError as e:
+        sys.exit(e.output)
+
 
 if __name__ == '__main__':
-    #Do stuff
     #for testing....
 
     new_jail = "example"
@@ -121,6 +145,8 @@ if __name__ == '__main__':
     user_names = ["test01", "test02", "test03", "test04"]
     user_gecos = ["test 01", "test 02", "test 03", "test 04"]
 
+    
+    
     for user, group, gecos  in zip(user_names, user_groups, user_gecos):
         print("Adding {} as a group.".format(group))
         add_group(new_jail, group)
@@ -128,3 +154,4 @@ if __name__ == '__main__':
         add_user(new_jail, user, group, gecos)
         print("Setting password expiration date for {}".format(user))
         set_password_expiration(new_jail, user)
+        drop_keys(key_path, jail_root, jail, home_dir, user)
