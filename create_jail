@@ -1,0 +1,38 @@
+#!/usr/bin/env python3
+
+if __name__ == '__main__':
+    import sys
+    program_name = sys.argv[0]
+    jail_name = str(sys.argv[1])
+    if program_name == './create_jail':
+        print('creation of jails')
+        import creation_of_jails
+        
+        lowest_ip = creation_of_jails.get_lowest_ip()
+        print("lowest ip is :" + lowest_ip)
+        interface = "em0" #xn0 on ***REMOVED*** em0 on lion
+        snapshot = creation_of_jails.get_latest_snapshot()
+        if creation_of_jails.check_name(jail_name):
+            creation_of_jails.add_entry(lowest_ip, jail_name, interface)
+            creation_of_jails.create_fstab_file(jail_name)
+            creation_of_jails.clone_base_jail(snapshot, jail_name)
+            creation_of_jails.start_jail(jail_name)
+    
+    elif program_name == './delete_jail':
+        print('deletion of jail')
+        import deletion_of_jails
+        
+        if(len(sys.argv) == 1):
+            print("The following jails are allocated for destruction: ")
+        elif(len(sys.argv) == 2):
+            jail_name = sys.argv[1]
+            print("Deleting jail " + jail_name)
+            deletion_of_jails.stop_jail(jail_name)
+            deletion_of_jails.destroy_jail(jail_name)
+            deletion_of_jails.remove_fstab(jail_name)
+            #edit the jail.conf file
+            print("edit the /etc/jail.conf file and remove portion relating to example")
+        else:
+            print("Incorrect number of arguments")
+    else:
+        print('something else')
