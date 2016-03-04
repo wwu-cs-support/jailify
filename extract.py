@@ -2,7 +2,7 @@
 #
 #    The purpose of this program is to determine the file type of a given
 # directory or archive and then extract the archive. It will also pull
-# out the team name from the title of the directory/archive. 
+# out the team name from the title of the directory/archive.
 
 import os
 import sys
@@ -11,14 +11,14 @@ import zipfile
 import mimetypes
 #import os.path
 
-def main(argv): 
+def main(argv):
 
     # Check for correct number of args and get team name.
     if (len(sys.argv) == 2):
-        team_name = check_title(argv[1]) 
+        team_name = check_title(argv[1])
     else:
         print("Incorrect number of arguments")
-        sys.exit()    
+        sys.exit()
 
     # Determine and return the file type.
     file_type = inspect_file(sys.argv[1])
@@ -34,7 +34,7 @@ def main(argv):
 
 def check_title(filename):
     """Return the team name from whatever the file name is."""
-    teamname = os.path.splitext(filename)[0] 
+    teamname = os.path.splitext(filename)[0]
     return teamname
 
 
@@ -52,7 +52,7 @@ def inspect_file(command_line_argument):
         print("Type is unacceptable")
         sys.exit()
 
-    return type 
+    return type
 
 
 def extract(filetype, filename):
