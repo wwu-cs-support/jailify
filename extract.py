@@ -7,9 +7,9 @@
 import os
 import sys
 import tarfile
-import os.path
-import lzma
 import zipfile
+import mimetypes
+#import os.path
 
 def main(argv): 
 
@@ -24,41 +24,53 @@ def main(argv):
     file_type = inspect_file(sys.argv[1])
 
     # Extract based on file type
-    if file_type == "tar":
-        extract_tar(argv[1])
-    elif file_type == "zip":
-        print("will zip later")
-        #extract_zip(argv[1])
-    elif file_type == "lzma":
-        extract_lzma(argv[1])
-    else:
-        print("it's a directory")
+    extract(file_type, argv[1])
 
 
-# The function check_title returns the team name from whatever the file name is.
+
+
+
+
+
 def check_title(filename):
+    """Return the team name from whatever the file name is."""
     teamname = os.path.splitext(filename)[0] 
     return teamname
 
-# The function inspect_file determines what type of file is given and returns it 
-# as a string.
+
 def inspect_file(command_line_argument):
-    
-    # Determine the file type.
+    """Return the file type"""
     if os.path.isdir(command_line_argument):
         type = "dir"
     elif tarfile.is_tarfile(command_line_argument):
         type = "tar"
     elif zipfile.is_zipfile(command_line_argument):
         type = "zip"
-    else:
+    elif mimetypes.guess_type(command_line_argument) == "lzma":
         type = "lzma"
+    else:
+        print("Type is unacceptable")
+        sys.exit()
 
     return type 
 
 
-# The function extract_tar opens, extracts, and closes a tar file.
+def extract(filetype, filename):
+    if filetype == "tar":
+        extract_tar(filename)
+    elif filetype == "zip":
+        extract_zip(filename)
+    elif filetype == "lzma":
+        extract_lzma(filename)
+    else:
+        print("it's a directory")
+
+
+### Extraction Functions ###
+
+
 def extract_tar(filenametar):
+    """Opens, extracts, and closes tar file"""
     try:
         tar = tarfile.open(filenametar)
         tar.extractall()
@@ -67,14 +79,26 @@ def extract_tar(filenametar):
         print("Couldn't open tarfile")
 
 
-# The function extract_lzma extracts lzma-compressed files
 def extract_lzma(lzfile):
+    """Extracts lzma compressed files"""
     try:
-        lz = lzma.open(lzfile)
-        lzma.decompress(lz)
-        tar.close()
+        lz = tarfile.open(lzfile, 'r:xz')
+        lz.extractall()
+        lz.close()
     except tarfile.TarError:
-        print("Couldn't open lzma compressed file with tar")
+        print("LZMA extraction error")
+
+
+
+#def extract_zip(zipfile):
+#    """Extracts zip files"""
+#    try:
+#        zipfile.open()
+#        zipfile.extractall()
+#        zipfile.close()
+#    except zipfile.BadZipFile:
+#       print("Couldn't extract zip file")
+        
 
 
 
