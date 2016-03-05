@@ -55,18 +55,18 @@ def inspect_file(command_line_argument):
         type(str) - Aborts if file is not 'dir', 'tar', 'zip' or 'lzma', otherwise returns one of these types.
     """
     if os.path.isdir(command_line_argument):
-        type = "dir"
+        file_type = "dir"
     elif tarfile.is_tarfile(command_line_argument):
-        type = "tar"
+        file_type = "tar"
     elif zipfile.is_zipfile(command_line_argument):
-        type = "zip"
+        file_type = "zip"
     elif mimetypes.guess_type(command_line_argument) == "lzma":
-        type = "lzma"
+        file_type = "lzma"
     else:
         print("Type is unacceptable")
         sys.exit()
 
-    return type
+    return file_type
 
 
 def extract(filetype, filename):
