@@ -13,18 +13,20 @@ import mimetypes
 
 def main(argv):
 
+
     # Check for correct number of args and get team name.
     if (len(sys.argv) == 2):
-        team_name = check_title(argv[1])
+        file_name = argv[1]
+        team_name = check_title(file_name)
     else:
         print("Incorrect number of arguments")
         sys.exit()
 
     # Determine and return the file type.
-    file_type = inspect_file(sys.argv[1])
+    file_type = inspect_file(file_name)
 
     # Extract based on file type
-    extract(file_type, argv[1])
+    extract(file_type, file_name)
 
 
 
