@@ -1,4 +1,4 @@
-# ***REMOVED*** | ***REMOVED***@wwu.edu | 25 February 2016
+# ***REMOVED*** | ***REMOVED***@wwu.edu | 04 March 2016
 #
 #    The purpose of this program is to determine the file type of a given
 # directory or archive and then extract the archive. It will also pull
@@ -129,21 +129,21 @@ def extract_lzma(lzfile):
 
 
 
-#def extract_zip(zipfile):
-#    """
-#    Opens, extracts, and closes zip files.
-#
-#    Args:
-#        zipfile(str) - the name of the file as provided on the command line.
-#    Returns:
-#        None
-#   """
-#    try:
-#        zipfile.open()
-#        zipfile.extractall()
-#        zipfile.close()
-#    except zipfile.BadZipFile:
-#       print("Couldn't extract zip file")
+def extract_zip(zipfilename):
+    """
+    Opens, extracts, and closes zip files.
+
+    Args:
+        zipfile(str) - the name of the file as provided on the command line.
+    Returns:
+        None
+   """
+    try:
+        myzip = zipfile.ZipFile(zipfilename)
+        myzip.extractall()
+        myzip.close()
+    except zipfile.BadZipFile:
+       print("Couldn't extract zip file")
         
 
 
