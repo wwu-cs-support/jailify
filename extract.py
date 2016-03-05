@@ -8,8 +8,8 @@ import os
 import sys
 import tarfile
 import zipfile
+import os.path
 import mimetypes
-#import os.path
 
 def main(argv):
 
@@ -35,26 +35,27 @@ def main(argv):
 
 
 def check_title(filename):
-    """
-    Retrieves the password from the name of the file.
+    """Retrieves the password from the name of the file.
 
     Args:
         filename(str) - Name of the file including file extension
     Returns:
-        teamname(str) - Name of the team, which is file name minus the file extension
+        teamname(str) - Name of the team, which is file name minus the file
+                        extension
     """
     teamname = os.path.splitext(filename)[0]
     return teamname
 
 
 def inspect_file(command_line_argument):
-    """
-    Determines which type of file is given.
+    """Determines which type of file is given.
 
     Args:
-        command_line_argument(str) - The name of the file given on the command line.
+        command_line_argument(str) - The name of the file given on the command
+                                     line.
     Returns:
-        type(str) - Aborts if file is not 'dir', 'tar', 'zip' or 'lzma', otherwise returns one of these types.
+        type(str) - Aborts if file is not 'dir', 'tar', 'zip' or 'lzma',
+                    otherwise returns one of these types.
     """
     if os.path.isdir(command_line_argument):
         file_type = "dir"
@@ -72,12 +73,13 @@ def inspect_file(command_line_argument):
 
 
 def extract(filetype, filename):
-    """
-    Determines what type of extraction should be used on the file and calls the appropriate extract function.
+    """Determines what type of extraction should be used on the file and calls
+       the appropriate extract function.
 
     Args:
         filetype(str) - The type of file. 'dir', 'zip', 'lzma' or 'tar'.
-        filename(str) - The name of the file as provided from the command line. Will include file extension.
+        filename(str) - The name of the file as provided from the command line.
+                        Will include file extension.
     Returns:
         None
     """
@@ -95,11 +97,11 @@ def extract(filetype, filename):
 
 
 def extract_tar(filenametar):
-    """
-    Opens, extracts, and closes tar file.
+    """Opens, extracts, and closes tar file.
 
     Args:
-        filenametar(str) - the name of the file as provided on the command line.
+        filenametar(str) - The name of the file as provided on the command 
+                           line.
     Returns:
         None
     """
@@ -112,8 +114,7 @@ def extract_tar(filenametar):
 
 
 def extract_lzma(lzfile):
-    """
-    Extracts lzma compressed files.
+    """Extracts lzma compressed files.
 
     Args:
         lzfile(str) - the name of the file as provided on the command line.
@@ -130,8 +131,7 @@ def extract_lzma(lzfile):
 
 
 def extract_zip(zipfilename):
-    """
-    Opens, extracts, and closes zip files.
+    """Opens, extracts, and closes zip files.
 
     Args:
         zipfile(str) - the name of the file as provided on the command line.
@@ -144,14 +144,6 @@ def extract_zip(zipfilename):
         myzip.close()
     except zipfile.BadZipFile:
        print("Couldn't extract zip file")
-        
-
-
-
-
-
-
-
 
 if __name__ == '__main__':
     main(sys.argv)
