@@ -26,12 +26,7 @@ def main(argv):
     file_type = inspect_file(file_name)
 
     # Extract based on file type
-    extract(file_type, file_name)
-
-
-
-##Functions##
-
+    directory = extract(file_type, file_name)
 
 
 def check_title(filename):
@@ -74,24 +69,29 @@ def inspect_file(command_line_argument):
 
 def extract(filetype, filename):
     """Determines what type of extraction should be used on the file and calls
-       the appropriate extract function.
+       the appropriate extract function. Then returns the directory to be worked
+       with.
 
     Args:
         filetype(str) - The type of file. 'dir', 'zip', 'lzma' or 'tar'.
         filename(str) - The name of the file as provided from the command line.
                         Will include file extension.
     Returns:
-        None
+        extractedfile(dir) - The extracted file.
     """
     if filetype == "tar":
-        extract_tar(filename)
+        extractedfile = extract_tar(filename)
+        extractedfile.close()
     elif filetype == "zip":
-        extract_zip(filename)
+        extractedfile = extract_zip(filename)
+        extractedfile.close()
     elif filetype == "lzma":
-        extract_lzma(filename)
+        extractedfile = extract_lzma(filename) 
+        extractedfile.close()
     else:
+        extractedfile = filename
         print("it's a directory")
-
+    return extractedfile
 
 ### Extraction Functions ###
 
@@ -103,12 +103,12 @@ def extract_tar(filenametar):
         filenametar(str) - The name of the file as provided on the command 
                            line.
     Returns:
-        None
+        tar(dir) - extracted tar file
     """
     try:
         tar = tarfile.open(filenametar)
         tar.extractall()
-        tar.close()
+        return tar
     except tarfile.TarError:
         print("Couldn't open tarfile")
 
@@ -119,13 +119,13 @@ def extract_lzma(lzfile):
     Args:
         lzfile(str) - the name of the file as provided on the command line.
     Returns:
-        None
+        lz(file) - extracted lzma directory. Must be closed after returning.
     """
     try:
         lz = tarfile.open(lzfile, 'r:xz')
         lz.extractall()
-        lz.close()
-    except tarfile.TarError:
+        return lz
+    except  tarfile.TarError:
         print("LZMA extraction error")
 
 
@@ -136,12 +136,12 @@ def extract_zip(zipfilename):
     Args:
         zipfile(str) - the name of the file as provided on the command line.
     Returns:
-        None
+        myzip(dir) - the extracted zip file.
    """
     try:
         myzip = zipfile.ZipFile(zipfilename)
         myzip.extractall()
-        myzip.close()
+        return myzip
     except zipfile.BadZipFile:
        print("Couldn't extract zip file")
 
