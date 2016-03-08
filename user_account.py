@@ -4,11 +4,11 @@ import datetime
 import subprocess
 
 def add_group(jail, group):
-    """Adds a specific user to their own group.
+    """Creates a group within the given jail.
 
     Args:
-        Jail: Current jail to make modification in.
-        Group: The name of the group that needs to be created.
+        jail (str): Current jail to make modification in.
+        group (str): The name of the group that needs to be created.
 
     Returns:
         None
@@ -23,16 +23,16 @@ def add_user(jail, user, group, gecos, groups=["wheel"],
     """Uses pw adduser to add a user to the current jail.
 
     Args:
-        Jail (str): Current jail to make modification in.
-        User (str): Current user to add to the jail.
-        Group (str): The group to add the current user to.
-        Gecos (str):Personal information related to the user.
-        Groups (Array): Other groups to potentially add the user to.
-        Skel_dir (str): Path to the directory that every user's directory
-            will be based off of.
-        Shell (str): Path to the default shell a user will be using.
-        Passwd_method (str): Type of password to be generated when account
-            has been successfully created.
+        jail (str): Current jail to make modification in.
+        user (str): Current user to add to the jail.
+        group (str): The group to add the current user to.
+        gecos (str): Personal information related to the user.
+        groups (list): Other groups to potentially add the user to.
+        skel_dir (str): Path to the directory that every user's directory
+                        will be based off of.
+        shell (str): Path to the default shell a user will be using.
+        passwd_method (str): Type of password to be generated when account
+                             has been successfully created.
 
     Returns:
         None
@@ -59,8 +59,8 @@ def set_password_expiration(jail, user):
     """Sets the account expiration to 120 days after creation.
 
     Args:
-        Jail (str): The current jail to make the modification in.
-        User (str): The user to set the password expiration date on.
+        jail (str): The current jail to make the modification in.
+        user (str): The user to set the password expiration date on.
 
     Returns:
         None
@@ -76,7 +76,7 @@ def do_command(command):
     """Executes command and error handles when applicable.
 
     Args:
-        Command (tuple) - The command that needs to be executed.
+        command (tuple): The command that needs to be executed.
 
     Returns:
         None
@@ -92,9 +92,10 @@ def send_msg():
     a user mail that can be checked during their first login
 
     Args:
+        None
 
     Returns:
-
+        None
     """
     pass
 
@@ -104,8 +105,10 @@ def drop_keys():
     folder
 
     Args:
+        None
 
     Returns:
+        None
     """
     pass
 
