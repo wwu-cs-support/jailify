@@ -102,18 +102,19 @@ def send_msg():
 
 
 def build_path(jail_root, jail, home_dir, user, ssh_dir):
-    """build_path_to_auth_keys
-    Builds a modifiable path to a users authorized_keys file
-    locating in their home directory
+    """Builds a modifiable path to a users authorized_keys file
+    locating in their home directory.
 
     Args:
-        Jail_root - Path to where all jails exist
-        Jail - Current jail name we are working in
-        Home_dir - Directory needed to traverse to
-        User - The user who will need authorized key updated
+        jail_root (str): Path to where all jails exist.
+        jail (str): Current jail name we are working in.
+        home_dir (str): Directory needed to traverse to.
+        user (str): The user who will need the authorized key updated.
+        ssh_dir (str): The path to the authorized_keys file.
+
     Returns:
-        Path - A successfull path to the authorized_key file
-            for a user
+        path (str): A successfull path to the authorized_key file
+                    for a user.
     """
     print("{}{}{}{}{}".format(jail_root, jail, home_dir, user, ssh_dir))
     path = os.path.join(jail_root, jail)
@@ -122,13 +123,17 @@ def build_path(jail_root, jail, home_dir, user, ssh_dir):
 
 
 def drop_keys(path_to_key, jail_root, jail, home_dir, user, ssh_dir):
-    """drop_keys
-    Places public key into authorized_keys inside the .ssh
-    folder
+    """Places public key into authorized_keys inside the .ssh
+    folder.
 
     Args:
-        Path_to_key - Path to the location where the pub key lives
-        Path_to_auth_keys - Path to location to drop key
+        path_to_key (str): Path to the location where the pub key lives.
+        jail_root (str): Path to where all jails exist.
+        jail (str): Current jail name we are working with.
+        home_dir (str): Directory needed to traverse to.
+        user (str): The use who will need the authorized_key updated.
+        ssh_dir (str): The path to the authorized_key file.
+
     Returns:
         None
     """
