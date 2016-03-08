@@ -81,7 +81,6 @@ def add_entry(ip_addr, jail_name, interface):
     Returns:
         None
     """
-
     print("Adding entry to /etc/jail.conf")
     with open('/etc/jail.conf', 'a') as jail_file:
         jail_description = "\n{} {{\n    interface = \"{}\";\n    ip4.addr = {};\n}}\n".format(jail_name, interface, ip_addr)
