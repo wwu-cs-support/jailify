@@ -33,8 +33,10 @@ def main(argv):
     file_type = inspect_file(file_name)
 
     # Extract based on file type
-    directory = extract(file_type, file_name)
+    extract(file_type, file_name)
+    directory = team_name
 
+    print(os.path.abspath(directory))
 
 def check_title(filename):
     """Retrieves the password from the name of the file.
@@ -87,18 +89,13 @@ def extract(filetype, filename):
         extractedfile (dir): the extracted file.
     """
     if filetype == "tar":
-        extractedfile = extract_tar(filename)
-        extractedfile.close()
+        extract_tar(filename)
     elif filetype == "zip":
-        extractedfile = extract_zip(filename)
-        extractedfile.close()
+        extract_zip(filename)
     elif filetype == "lzma":
-        extractedfile = extract_lzma(filename) 
-        extractedfile.close()
+        extract_lzma(filename) 
     else:
-        extractedfile = filename
         print("it's a directory")
-    return extractedfile
 
 ### Extraction Functions ###
 
@@ -110,12 +107,12 @@ def extract_tar(filenametar):
         filenametar (str): the name of the file as provided on the command 
                            line.
     Returns:
-        tar (dir): extracted tar file
+        None
     """
     try:
         tar = tarfile.open(filenametar)
         tar.extractall()
-        return tar
+        tar.close()
     except tarfile.TarError:
         print("Couldn't open tarfile")
 
@@ -126,12 +123,12 @@ def extract_lzma(lzfile):
     Args:
         lzfile (str): the name of the file as provided on the command line.
     Returns:
-        lz (file):extracted lzma directory. Must be closed after returning.
+        None
     """
     try:
         lz = tarfile.open(lzfile, 'r:xz')
         lz.extractall()
-        return lz
+        lz.close()
     except  tarfile.TarError:
         print("LZMA extraction error")
 
@@ -143,12 +140,12 @@ def extract_zip(zipfilename):
     Args:
         zipfile (str): the name of the file as provided on the command line.
     Returns:
-        myzip (dir): the extracted zip file.
+        None
    """
     try:
         myzip = zipfile.ZipFile(zipfilename)
         myzip.extractall()
-        return myzip
+        myzip.close()
     except zipfile.BadZipFile:
        print("Couldn't extract zip file")
 
