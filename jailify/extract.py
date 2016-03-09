@@ -12,7 +12,14 @@ import os.path
 import mimetypes
 
 def main(argv):
+    """Check for correct number args, determine file type, extract 
+       file, extract data from file.
 
+    Args:
+        argv (str): first arg should be the file name.
+    Returns:
+        None
+    """
 
     # Check for correct number of args and get team name.
     if (len(sys.argv) == 2):
