@@ -33,9 +33,9 @@ def check_title(filename):
     """Retrieves the password from the name of the file.
 
     Args:
-        filename(str) - Name of the file including file extension
+        filename (str): name of the file including file extension
     Returns:
-        teamname(str) - Name of the team, which is file name minus the file
+        teamname (str): name of the team, which is file name minus the file
                         extension
     """
     teamname = os.path.splitext(filename)[0]
@@ -46,10 +46,10 @@ def inspect_file(command_line_argument):
     """Determines which type of file is given.
 
     Args:
-        command_line_argument(str) - The name of the file given on the command
+        command_line_argument (str): the name of the file given on the command
                                      line.
     Returns:
-        type(str) - Aborts if file is not 'dir', 'tar', 'zip' or 'lzma',
+        type (str): aborts if file is not 'dir', 'tar', 'zip' or 'lzma',
                     otherwise returns one of these types.
     """
     if os.path.isdir(command_line_argument):
@@ -73,11 +73,11 @@ def extract(filetype, filename):
        with.
 
     Args:
-        filetype(str) - The type of file. 'dir', 'zip', 'lzma' or 'tar'.
-        filename(str) - The name of the file as provided from the command line.
+        filetype (str): the type of file. 'dir', 'zip', 'lzma' or 'tar'.
+        filename (str): the name of the file as provided from the command line.
                         Will include file extension.
     Returns:
-        extractedfile(dir) - The extracted file.
+        extractedfile (dir): the extracted file.
     """
     if filetype == "tar":
         extractedfile = extract_tar(filename)
@@ -100,10 +100,10 @@ def extract_tar(filenametar):
     """Opens, extracts, and closes tar file.
 
     Args:
-        filenametar(str) - The name of the file as provided on the command 
+        filenametar (str): the name of the file as provided on the command 
                            line.
     Returns:
-        tar(dir) - extracted tar file
+        tar (dir): extracted tar file
     """
     try:
         tar = tarfile.open(filenametar)
@@ -117,9 +117,9 @@ def extract_lzma(lzfile):
     """Extracts lzma compressed files.
 
     Args:
-        lzfile(str) - the name of the file as provided on the command line.
+        lzfile (str): the name of the file as provided on the command line.
     Returns:
-        lz(file) - extracted lzma directory. Must be closed after returning.
+        lz (file):extracted lzma directory. Must be closed after returning.
     """
     try:
         lz = tarfile.open(lzfile, 'r:xz')
@@ -134,9 +134,9 @@ def extract_zip(zipfilename):
     """Opens, extracts, and closes zip files.
 
     Args:
-        zipfile(str) - the name of the file as provided on the command line.
+        zipfile (str): the name of the file as provided on the command line.
     Returns:
-        myzip(dir) - the extracted zip file.
+        myzip (dir): the extracted zip file.
    """
     try:
         myzip = zipfile.ZipFile(zipfilename)
