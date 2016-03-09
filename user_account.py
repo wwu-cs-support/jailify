@@ -101,48 +101,28 @@ def send_msg():
     pass
 
 
-def build_path(jail_root, jail, home_dir, user, ssh_dir):
-    """Builds a modifiable path to a users authorized_keys file
-    locating in their home directory.
-
-    Args:
-        jail_root (str): Path to where all jails exist.
-        jail (str): Current jail name we are working in.
-        home_dir (str): Directory needed to traverse to.
-        user (str): The user who will need the authorized key updated.
-        ssh_dir (str): The path to the authorized_keys file.
-
-    Returns:
-        path (str): A successfull path to the authorized_key file
-                    for a user.
-    """
-    print("{}{}{}{}{}".format(jail_root, jail, home_dir, user, ssh_dir))
-    path = os.path.join(jail_root, jail)
-    print("{}".format(path))
-    return path
-
-
-def drop_keys(path_to_key, jail_root, jail, home_dir, user, ssh_dir):
+def add_key(jail, user):
     """Places public key into authorized_keys inside the .ssh
     folder.
 
     Args:
         path_to_key (str): Path to the location where the pub key lives.
-        jail_root (str): Path to where all jails exist.
         jail (str): Current jail name we are working with.
-        home_dir (str): Directory needed to traverse to.
         user (str): The use who will need the authorized_key updated.
-        ssh_dir (str): The path to the authorized_key file.
 
     Returns:
         None
     """
-    path_to_auth_keys = build_path(jail_root, jail, home_dir, user, ssh_dir)
-    #command = ("cat", path_to_key, ">>", path_to_auth_keys)
-    #try:
-    #    subprocess.check_all(command)
-    #except subprocess.CalledProcessError as e:
-    #    sys.exit(e.output)
+    path_to_key = "/home/***REMOVED***/{}/{}.pub".format(jail, user)
+    print("{}".format(path_to_key))
+
+    jail_root = "/usr/jail/"
+    home_dir = "usr/home/"
+    auth_key_path = ".ssh/authorized_keys"
+    
+    path = os.path.join(jail_root, jail, home_dir, user, auth_key_path)
+    
+    print("{}".format(path))
 
 
 if __name__ == '__main__':
@@ -153,18 +133,12 @@ if __name__ == '__main__':
     user_names = ["test01", "test02", "test03", "test04"]
     user_gecos = ["test 01", "test 02", "test 03", "test 04"]
 
-    key_path = ""
-    jail_root = "/usr/jail/"
-    home_dir = "/usr/home/"
-    ssh_dir = "/.ssh/authorized_keys"
-
-
-    
     for user, group, gecos  in zip(user_names, user_groups, user_gecos):
-    #    print("Adding {} as a group.".format(group))
-    #    add_group(jail, group)
-    #    print("Adding {} as a user.".format(user))
-    #    add_user(jail, user, group, gecos)
-    #    print("Setting password expiration date for {}".format(user))
-    #    set_password_expiration(jail, user)
-        drop_keys(key_path, jail_root, jail, home_dir, user, ssh_dir)
+        print("Adding {} as a group.".format(group))
+        add_group(jail, group)
+        print("Adding {} as a user.".format(user))
+        add_user(jail, user, group, gecos)
+        print("Setting password expiration date for {}".format(user))
+        set_password_expiration(jail, user)
+        print("Placing ssh-keys for {}".format(user))
+        drop_keys(jail, user)
