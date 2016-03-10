@@ -22,7 +22,7 @@ def get_interface():
     if(len(interfaces) == 1):
         return interfaces[0]
     else:
-        print("More than one non loopback interface")
+        print("Multiple interfaces detected. Aborting due to ambiguity.")
         sys.exit(1)
 
 def check_name(jail_name):
@@ -77,9 +77,8 @@ def get_lowest_ip():
     Returns:
         A string that is the next available ip address
     """
-    jail_conf_file = open('/etc/jail.conf', 'r')
-    jail_config = jail_conf_file.read()
-    jail_conf_file.close()
+    with open('/etc/jail.conf', 'r') as jail_config:
+        jail_config = jail_config.read()
 
     ip_addrs = re.findall("(?<=ip4.addr = )(.*);", jail_config)
 
@@ -161,17 +160,6 @@ def start_jail(jail_name):
         sys.exit(e.output)
 
 if __name__ == '__main__':
-    """Calls functions to create a jail.
-
-    Calls all necessary functions to define variables needed to create a jail.
-    Then calls all necessary functions to create the jail.
-
-    Args:
-        None
-
-    Returns:
-        None
-    """
     lowest_ip = get_lowest_ip()
     jail_name = str(sys.argv[1]) #extract.py - teamname
     interface = get_interface() #"em0" #xn0 on ***REMOVED*** em0 on lion
