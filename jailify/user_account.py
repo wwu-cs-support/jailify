@@ -14,7 +14,7 @@ def add_group(jail, group):
     Returns:
         None
     """
-    command = ('sudo', 'jexec', jail, 'pw', 'groupadd', group)
+    command = ('jexec', jail, 'pw', 'groupadd', group)
     do_command(command)
 
 
@@ -39,7 +39,6 @@ def add_user(jail, user, group, gecos, groups=["wheel"],
         None
     """
     command = (
-        'sudo',
         'jexec',
         jail,
         'pw',
@@ -69,7 +68,7 @@ def set_password_expiration(jail, user):
     duration = 120
     exp_date = datetime.date.today() + datetime.timedelta(duration)
     exp_date = exp_date.strftime('%m-%b-%Y')
-    command = ('sudo', 'jexec', jail, 'pw', 'usermod', '-p', exp_date, '-n', user)
+    command = ('jexec', jail, 'pw', 'usermod', '-p', exp_date, '-n', user)
     do_command(command)
 
 
@@ -101,7 +100,7 @@ def send_msg():
     pass
 
 
-def add_key(jail, user):
+def add_key(jail, user, key):
     """Places public key into authorized_keys inside the .ssh
     folder.
 
@@ -113,16 +112,18 @@ def add_key(jail, user):
     Returns:
         None
     """
-    path_to_key = "/home/***REMOVED***/{}/{}.pub".format(jail, user)
-    print("{}".format(path_to_key))
-
     jail_root = "/usr/jail/"
     home_dir = "usr/home/"
     auth_key_path = ".ssh/authorized_keys"
     
-    path = os.path.join(jail_root, jail, home_dir, user, auth_key_path)
-    
-    print("{}".format(path))
+    path_to_file = os.path.join(jail_root, jail, home_dir, user, auth_key_path)
+    print("This the path to authorized_keys: {}".format(path_to_file))
+
+    if os.path.isfile(path_to_file):
+        with open(path_to_file, "a") as f:
+            f.write(key)
+    else:
+        print("Error: {} does not exist.".format(path_to_file))
 
 
 if __name__ == '__main__':
@@ -132,8 +133,9 @@ if __name__ == '__main__':
     user_groups = ["test01", "test02", "test03", "test04"]
     user_names = ["test01", "test02", "test03", "test04"]
     user_gecos = ["test 01", "test 02", "test 03", "test 04"]
+    user_keys = ["jsdahj01", "jksda02", "jasdjk03", "jkdakh04"]
 
-    for user, group, gecos  in zip(user_names, user_groups, user_gecos):
+    for user, group, gecos, key  in zip(user_names, user_groups, user_gecos, user_keys):
         print("Adding {} as a group.".format(group))
         add_group(jail, group)
         print("Adding {} as a user.".format(user))
@@ -141,4 +143,4 @@ if __name__ == '__main__':
         print("Setting password expiration date for {}".format(user))
         set_password_expiration(jail, user)
         print("Placing ssh-keys for {}".format(user))
-        drop_keys(jail, user)
+        add_key(jail, user, key)
