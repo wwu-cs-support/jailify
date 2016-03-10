@@ -5,6 +5,26 @@ import os.path
 import ipaddress
 import subprocess
 
+def get_interface():
+    """Finds the correct interface.
+
+    Finds the lowest interface by using the command ifconfig then searching through
+    the output for the non loopback interface. 
+
+    Args:
+        None
+
+    Returns:
+        interface (str): correct interface
+    """
+    output = bytes.decode(subprocess.check_output(('ifconfig')), 'utf-8')
+    interfaces = [i for i in re.findall(r'(^\S*):', output, re.M) if i != 'lo0']
+    if(len(interfaces) == 1):
+        return interfaces[0]
+    else:
+        print("Multiple interfaces detected. Aborting due to ambiguity.")
+        sys.exit(1)
+
 def check_name(jail_name):
     """Checks the desired jail name for availability.
 
@@ -57,9 +77,8 @@ def get_lowest_ip():
     Returns:
         A string that is the next available ip address
     """
-    jail_conf_file = open('/etc/jail.conf', 'r')
-    jail_config = jail_conf_file.read()
-    jail_conf_file.close()
+    with open('/etc/jail.conf', 'r') as jail_config:
+        jail_config = jail_config.read()
 
     ip_addrs = re.findall("(?<=ip4.addr = )(.*);", jail_config)
 
@@ -115,10 +134,13 @@ def clone_base_jail(snapshot, jail_name):
     snapshot_path = "{}{}@{}".format(path, jail_version, snapshot) #os.path
     jail_path = os.path.join(path, jail_name)
 
-    if(subprocess.run(["zfs", "clone", snapshot_path, jail_path]) == 0):
-        print("Error cloning base jail")
-    else:
+    #cmd = ["zfs", "clone", snapshot_path, jail_path]
+    #do_command(cmd)
+    try:
+        subprocess.check_call(["zfs", "clone", snapshot_path, jail_path])
         print("Success cloning base jail")
+    except subprocess.CalledProcessError as e:
+        sys.exit(e.output)
 
 def start_jail(jail_name):
     """Starts jail by running 'service jail start jail_name' where jail_name is an argument.
@@ -130,24 +152,17 @@ def start_jail(jail_name):
         None
     """
     cmd = ["service", "jail", "start", jail_name]
-    if(subprocess.run(cmd) == 0):
-        print("Error starting jail")
+
+    #do_command(cmd)
+    try:
+        subprocess.check_call(cmd)
+    except subprocess.CalledProcessError as e:
+        sys.exit(e.output)
 
 if __name__ == '__main__':
-    """Calls functions to create a jail.
-
-    Calls all necessary functions to define variables needed to create a jail.
-    Then calls all necessary functions to create the jail.
-
-    Args:
-        None
-
-    Returns:
-        None
-    """
     lowest_ip = get_lowest_ip()
-    jail_name = str(sys.argv[1])
-    interface = "em0" #xn0 on ***REMOVED*** em0 on lion
+    jail_name = str(sys.argv[1]) #extract.py - teamname
+    interface = get_interface() #"em0" #xn0 on ***REMOVED*** em0 on lion
     snapshot = get_latest_snapshot()
     if check_name(jail_name):
         add_entry(lowest_ip, jail_name, interface)

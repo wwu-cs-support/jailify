@@ -1,0 +1,36 @@
+#!/usr/bin/env python3
+
+if __name__ == '__main__':
+    import sys
+    program_name = sys.argv[0]
+    #jail_name = str(sys.argv[1])
+    if program_name == './create_jail':
+        print('creation of jails')
+        import creation_of_jails
+        jail_name = str(sys.argv[1])
+
+        lowest_ip = creation_of_jails.get_lowest_ip()
+        interface = creation_of_jails.get_interface() #"em0" #xn0 on ***REMOVED*** em0 on lion
+        snapshot = creation_of_jails.get_latest_snapshot()
+        if creation_of_jails.check_name(jail_name):
+            creation_of_jails.add_entry(lowest_ip, jail_name, interface)
+            creation_of_jails.create_fstab_file(jail_name)
+            creation_of_jails.clone_base_jail(snapshot, jail_name)
+            creation_of_jails.start_jail(jail_name)
+        else:
+            sys.exit(1)
+
+    elif program_name == './delete_jail':
+        print('deletion of jail')
+        import delete
+
+        if(len(sys.argv) == 1):
+            delete.no_name()
+        elif(len(sys.argv) == 2):
+            delete.given_name(str(sys.argv[1]))
+        else:
+            print("Incorrect number of arguments")
+            sys.exit(1)
+    else:
+        print('Incorrect program name')
+        sys.exit(1)
