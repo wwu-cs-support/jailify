@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import sys
+import os.path
 import datetime
 import subprocess
 
@@ -100,31 +101,44 @@ def send_msg():
     pass
 
 
-def drop_keys():
+def add_key(jail, user):
     """Places public key into authorized_keys inside the .ssh
-    folder
+    folder.
 
     Args:
-        None
+        path_to_key (str): Path to the location where the pub key lives.
+        jail (str): Current jail name we are working with.
+        user (str): The use who will need the authorized_key updated.
 
     Returns:
         None
     """
-    pass
+    path_to_key = "/home/***REMOVED***/{}/{}.pub".format(jail, user)
+    print("{}".format(path_to_key))
+
+    jail_root = "/usr/jail/"
+    home_dir = "usr/home/"
+    auth_key_path = ".ssh/authorized_keys"
+    
+    path = os.path.join(jail_root, jail, home_dir, user, auth_key_path)
+    
+    print("{}".format(path))
+
 
 if __name__ == '__main__':
-    #Do stuff
     #for testing....
 
-    new_jail = "example"
+    jail = "example"
     user_groups = ["test01", "test02", "test03", "test04"]
     user_names = ["test01", "test02", "test03", "test04"]
     user_gecos = ["test 01", "test 02", "test 03", "test 04"]
 
     for user, group, gecos  in zip(user_names, user_groups, user_gecos):
         print("Adding {} as a group.".format(group))
-        add_group(new_jail, group)
+        add_group(jail, group)
         print("Adding {} as a user.".format(user))
-        add_user(new_jail, user, group, gecos)
+        add_user(jail, user, group, gecos)
         print("Setting password expiration date for {}".format(user))
-        set_password_expiration(new_jail, user)
+        set_password_expiration(jail, user)
+        print("Placing ssh-keys for {}".format(user))
+        drop_keys(jail, user)
