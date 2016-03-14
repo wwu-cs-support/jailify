@@ -31,7 +31,7 @@ def main(argv):
 
     # Determine and return the file type.
     file_type = inspect_file(file_name)
-
+	
     # Extract based on file type
     file_contents = extract(file_type, file_name)
     print(file_contents)
@@ -45,9 +45,12 @@ def check_title(filename):
         teamname (str): name of the team, which is file name minus the file
                         extension
     """
-    teamname = os.path.splitext(filename)[0]
-    return teamname
-
+    if os.path.isfile(filename):
+        teamname = os.path.splitext(filename)[0]
+        return teamname
+    else:
+        print("file not found")
+        sys.exit()
 
 def inspect_file(command_line_argument):
     """Determines which type of file is given.
