@@ -56,17 +56,17 @@ def add_user(jail, user, group, gecos, groups=["wheel"],
     do_command(command)
 
 
-def set_password_expiration(jail, user):
+def set_password_expiration(jail, user, duration=120):
     """Sets the account expiration to 120 days after creation.
 
     Args:
         jail (str): The current jail to make the modification in.
         user (str): The user to set the password expiration date on.
+        duration (int): The number of days before the password expires.
 
     Returns:
         None
     """
-    duration = 120
     exp_date = datetime.date.today() + datetime.timedelta(duration)
     exp_date = exp_date.strftime('%m-%b-%Y')
     command = ('jexec', jail, 'pw', 'usermod', '-p', exp_date, '-n', user)
@@ -86,7 +86,8 @@ def send_msg():
     pass
 
 
-def add_key(jail, user, key):
+def add_key(jail, user, key, jail_root="/usr/jail/", home_dir="usr/home/",
+            auth_key_path=".ssh/authorized_keys"):
     """Places public key into authorized_keys inside the .ssh
     folder.
 
@@ -98,18 +99,13 @@ def add_key(jail, user, key):
     Returns:
         None
     """
-    jail_root = "/usr/jail/"
-    home_dir = "usr/home/"
-    auth_key_path = ".ssh/authorized_keys"
-    
     path_to_file = os.path.join(jail_root, jail, home_dir, user, auth_key_path)
-    print("This the path to authorized_keys: {}".format(path_to_file))
-
     if os.path.isfile(path_to_file):
         with open(path_to_file, "a") as f:
-            f.write(key)
+            if f.write(key) <= 0:
+                sys.exit("jailify: error: Could not write to authorized_keys file.")
     else:
-        print("Error: {} does not exist.".format(path_to_file))
+        sys.exit("jailify: error: The file {} does not exist.".format(path_to_file))
 
 
 if __name__ == '__main__':
