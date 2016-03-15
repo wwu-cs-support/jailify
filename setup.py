@@ -13,6 +13,7 @@ setup(
     entry_points={
         'console_scripts': [
             'jailify=jailify.__main__:main',
+            'dejailify=dejaility.__main__:main'
         ],
     },
 )
