@@ -8,12 +8,13 @@ import jailify.delete
 import jailify.extract
 import jailify.creation_of_jails
 
+PROG_NAME = os.path.basename(sys.argv and sys.argv[0] or __file__)
 
 def root_check(func):
     @functools.wraps(func)
     def _wrapper(*args, **kwargs):
         if os.geteuid() != 0:
-            sys.exit("jailify: error: must be ran as root")
+            sys.exit("{}: error: must be ran as root".format(PROG_NAME))
         else:
             func(*args, **kwargs)
     return _wrapper
@@ -21,13 +22,8 @@ def root_check(func):
 
 @root_check
 def jailify_main():
-    pass
+    print("In jailify main")
 
 @root_check
 def dejailify_main():
-    pass
-
-
-if __name__ == "__main__":
-    jailify_main()
-    defailify_main()
+    print("In dejailify main")
