@@ -4,6 +4,7 @@ import os.path
 import datetime
 import subprocess
 from jailify.util import do_command
+from jailify.util import do_command_with_return
 
 def add_group(jail, group):
     """Creates a group within the given jail.
@@ -53,7 +54,9 @@ def add_user(jail, user, group, gecos, groups=["wheel"],
         '-s', shell,
         '-w', passwd_method
     )
-    do_command(command)
+    message_body = do_command_with_return(command)
+    message_body = "Your password is {}".format(message_body.strip('\n'))
+    send_msg(jail, user, message_body)
 
 
 def set_password_expiration(jail, user, duration=120):
@@ -73,17 +76,20 @@ def set_password_expiration(jail, user, duration=120):
     do_command(command)
 
 
-def send_msg():
+def send_msg(jail, recipient, body,  subject="Welcome"):
     """Uses information from adduser cmdline progrm to send
     a user mail that can be checked during their first login
 
     Args:
-        None
+        jail (str): Cureent jail we are woring in.
+        recipient (str): Name of user to send message to.
+        subject (str): Header of mail to be sent to the user.
+        body (str): The message body to be sent to the user.
 
     Returns:
         None
     """
-    pass
+    print("{}".format(body))
 
 
 def add_key(jail, user, key, jail_root="/usr/jail/", home_dir="usr/home/",
@@ -115,7 +121,7 @@ if __name__ == '__main__':
     user_groups = ["test01", "test02", "test03", "test04"]
     user_names = ["test01", "test02", "test03", "test04"]
     user_gecos = ["test 01", "test 02", "test 03", "test 04"]
-    user_keys = ["jsdahj01", "jksda02", "jasdjk03", "jkdakh04"]
+    user_keys = ["djkaafd01", "jksda02", "jasdjk03", "jkdakh04"]
 
     for user, group, gecos, key  in zip(user_names, user_groups, user_gecos, user_keys):
         print("Adding {} as a group.".format(group))
