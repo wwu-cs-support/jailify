@@ -3,6 +3,7 @@ import sys
 import os.path
 import datetime
 import subprocess
+from jailify.util import do_command
 
 def add_group(jail, group):
     """Creates a group within the given jail.
@@ -70,21 +71,6 @@ def set_password_expiration(jail, user):
     exp_date = exp_date.strftime('%m-%b-%Y')
     command = ('jexec', jail, 'pw', 'usermod', '-p', exp_date, '-n', user)
     do_command(command)
-
-
-def do_command(command):
-    """Executes command and error handles when applicable.
-
-    Args:
-        command (tuple): The command that needs to be executed.
-
-    Returns:
-        None
-    """
-    try:
-        subprocess.check_call(command)
-    except subprocess.CalledProcessError as e:
-        sys.exit(e.output)
 
 
 def send_msg():
