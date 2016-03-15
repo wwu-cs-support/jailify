@@ -31,10 +31,15 @@ def main(argv):
 
     # Determine and return the file type.
     file_type = inspect_file(file_name)
-	
+
     # Extract based on file type
     file_contents = extract(file_type, file_name)
     print(file_contents)
+
+    #for f in range(1,(len(file_contents)-1)):
+    #    content = file_contents[f].open()
+    #    print(content.read())
+    #    content.close()
 
 def check_title(filename):
     """Retrieves the password from the name of the file.
@@ -91,18 +96,16 @@ def extract(filetype, filename):
     Returns:
         None
     """
-    if filetype == "bz2":
-        filelist = extract_tar(filename, filetype)
-    elif filetype == "gz":
-        filelist = extract_tar(filename, filetype)
-    elif filetype == "xz":
+
+    if filetype == "bz2" or filetype == "gz" or filetype == "xz":
         filelist = extract_tar(filename, filetype)
     elif filetype == "zip":
-        filelist = extract_zip(filename) 
+        filelist = extract_zip(filename)
     else:
-        print("it's a directory")
+        print("It's a directory")
 
     return filelist
+
 
 ### Extraction Functions ###
 
