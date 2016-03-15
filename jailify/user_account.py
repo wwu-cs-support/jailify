@@ -115,6 +115,10 @@ def add_key(jail, user, key):
 if __name__ == '__main__':
     #for testing....
 
+    ####Down the road can take this and apply it to __main__.py
+    if os.geteuid() != 0:
+        sys.exit("Must be ran as root! (informal error message I know)")
+    
     jail = "example"
     user_groups = ["test01", "test02", "test03", "test04"]
     user_names = ["test01", "test02", "test03", "test04"]
