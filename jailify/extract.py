@@ -34,12 +34,9 @@ def main(argv):
 
     # Extract based on file type
     file_contents = extract(file_type, file_name)
+    print("Contents from archive: ")
     print(file_contents)
 
-    #for f in range(1,(len(file_contents)-1)):
-    #    content = file_contents[f].open()
-    #    print(content.read())
-    #    content.close()
 
 def check_title(filename):
     """Retrieves the password from the name of the file.
@@ -64,8 +61,8 @@ def inspect_file(command_line_argument):
         command_line_argument (str): the name of the file given on the command
                                      line.
     Returns:
-        type (str): aborts if file is not 'dir', 'tar', 'zip' or 'lzma',
-                    otherwise returns one of these types.
+        file_type (str): aborts if file is not a directory, gzip, zip or xz compressed file.
+                         otherwise returns a string representing one of the four types.
     """
     if os.path.isdir(command_line_argument):
         file_type = "dir"
@@ -90,19 +87,22 @@ def extract(filetype, filename):
        with.
 
     Args:
-        filetype (str): the type of file. 'dir', 'zip', 'lzma' or 'tar'.
+        filetype (str): the type of file. 'dir', 'zip', 'xz', 'bzip2' or 'gzip'.
         filename (str): the name of the file as provided from the command line.
-                        Will include file extension.
+                        Includes file extension.
     Returns:
-        None
+        filelist (list): a list containing extracted file objects from the directory.
     """
 
     if filetype == "bz2" or filetype == "gz" or filetype == "xz":
         filelist = extract_tar(filename, filetype)
     elif filetype == "zip":
         filelist = extract_zip(filename)
+    elif filetype == "dir":
+        print("Deal with directory")
     else:
-        print("It's a directory")
+        print("error with file type in extract()")
+        sys.exit()
 
     return filelist
 
@@ -111,13 +111,14 @@ def extract(filetype, filename):
 
 
 def extract_tar(filenametar, comptype):
-    """Opens, extracts, and closes tar file.
+    """Opens, extracts, and closes tar file that has been compressed with one of gzip, xz, and bzip2.
 
     Args:
         filenametar (str): the name of the file as provided on the command 
                            line.
+        comptype    (str): the compression type (bzip2, gzip or xz) to be passed in when decompressing.
     Returns:
-        extar (list): the members as a list of TarInfo objects.
+        L (list): the members as a list of TarExFile objects.
     """
     try:
         L = []
@@ -133,9 +134,9 @@ def extract_zip(zipfilename):
     """Opens, extracts, and closes zip files.
 
     Args:
-        zipfile (str): the name of the file as provided on the command line.
+        zipfilename (str): the name of the file as provided on the command line.
     Returns:
-        None
+        L (list): the members of the archive extracted as file objects.
    """
     try:
         L = []
