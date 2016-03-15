@@ -1,11 +1,33 @@
-import jailify.user_account
-import jailify.extract
-import jailify.delete
-import jailify.creation_of_jails
-import jailify.util
+import os
+import sys
+import functools
 
-def main():
+import jailify.util
+import jailify.delete
+import jailify.extract
+import jailify.user_account
+import jailify.creation_of_jails
+
+
+def root_check(func):
+    @functools.wraps(func)
+    def _wrapper(*args, **kwargs):
+        if os.geteuid() != 0:
+            sys.exit("jailify: error: must be ran as root")
+        else:
+            func(*args, **kwargs)
+    return _wrapper
+
+
+@root_check
+def jailify_main():
     pass
 
+@root_check
+def dejailify_main():
+    pass
+
+
 if __name__ == "__main__":
-    main()
+    jailify_main()
+    defailify_main()
