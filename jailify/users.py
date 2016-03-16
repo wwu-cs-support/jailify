@@ -76,26 +76,32 @@ def set_password_expiration(jail, user, duration=120):
     do_command(command)
 
 
-def send_msg(jail, recipient, body,  subject="Welcome"):
+def send_msg(jail, user, body, subject="Welcome"):
     """Uses information from adduser cmdline progrm to send
-    a user mail that can be checked during their first login
+       a user mail that can be checked during their first login
 
     Args:
-        jail (str): Cureent jail we are woring in.
-        recipient (str): Name of user to send message to.
+        jail (str): The current jail to be sending a message in.
+        user (str): Name of user to send message to.
         subject (str): Header of mail to be sent to the user.
         body (str): The message body to be sent to the user.
 
     Returns:
         None
     """
-    print("{}".format(body))
+    command = ('jexec', jail, 'mail', '-s', subject, user)
+    try:
+        process = subprocess.Popen(command, stdin=subprocess.PIPE)
+    except Exception as e:
+        sys.exit(e.output)
+    process.communicate(bytes(body, 'UTF-8'))
+    print("Sent mail to {}.".format(user))
 
 
 def add_key(jail, user, key, jail_root="/usr/jail/", home_dir="usr/home/",
             auth_key_path=".ssh/authorized_keys"):
     """Places public key into authorized_keys inside the .ssh
-    folder.
+       folder.
 
     Args:
         path_to_key (str): Path to the location where the pub key lives.
