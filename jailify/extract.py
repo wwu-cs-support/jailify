@@ -21,20 +21,20 @@ def main(argv):
     Returns:
         None
     """
-    print()
-    # Check for correct number of args and get team name.
+
+    # Check for correct number of args and get the file name/path.
     if (len(sys.argv) == 2):
-        file_name = argv[1]
-        print("file_name set to: " + file_name)
-        team_name = check_title(file_name)
-        print("team_name set to: " + team_name)
+        try:
+            if os.path.isfile(argv[1]) or os.pathisdir(argv[1]):
+                file_name = argv[1]
+        except ValueError:
+            print("Error with file.")
     else:
         print("Incorrect number of arguments")
         sys.exit()
 
     # Determine and return the file type.
     file_type = inspect_file(file_name)
-    print("file_type is: " + file_type + " in main")
 
     # Extract based on file type
     extract(file_type, file_name)
@@ -42,23 +42,11 @@ def main(argv):
 
 
 
-def check_title(filename):
-    """Retrieves the password from the name of the file.
 
-    Args:
-        filename (str): name of the file including file extension
-    Returns:
-        teamname (str): name of the team, which is file name minus the file
-                        extension
-    """
-    print("command line argument sent to check_title")
-    if os.path.isfile(filename) or os.path.isdir(filename):
-        teamname = os.path.splitext(filename)[0]
-        return teamname
-    else:
-        print("file not found")
-        sys.exit()
 
+
+
+## INSPECT_FILE ##
 def inspect_file(command_line_argument):
     """Determines which type of file is given.
 
@@ -69,22 +57,16 @@ def inspect_file(command_line_argument):
         file_type (str): aborts if file is not a directory, gzip, zip or xz compressed file.
                          otherwise returns a string representing one of the four types.
     """
-    print("team_name sent to inspect_file. Let's find the type.")
     if os.path.isdir(command_line_argument):
         file_type = "dir"
-        print("file_type set to: " + file_type)
     elif mimetypes.guess_type(command_line_argument)[1] == 'bzip2':
         file_type = "bz2"
-        print("file_type set to: " + file_type)
     elif mimetypes.guess_type(command_line_argument)[1] == 'gzip':
         file_type = "gz"
-        print("file_type set to: " + file_type)
     elif zipfile.is_zipfile(command_line_argument):
         file_type = "zip"
-        print("file_type set to: " + file_type)
     elif mimetypes.guess_type(command_line_argument)[1] == "xz":
         file_type = "xz"
-        print("file_type set to: " + file_type)
     else:
         print("Type is unacceptable")
         sys.exit()
@@ -92,6 +74,10 @@ def inspect_file(command_line_argument):
     return file_type
 
 
+
+
+
+## EXTRACT ##
 def extract(filetype, filename):
     """Determines what type of extraction should be used on the file and calls
        the appropriate extract function. Then returns the directory to be worked
@@ -106,22 +92,22 @@ def extract(filetype, filename):
     """
 
     if filetype == "bz2" or filetype == "gz" or filetype == "xz":
-        print("since file type is " + filetype + "call extract_tar")
         extract_tar(filename, filetype)
     elif filetype == "zip":
-        print("since file type is " + filetype + "call extract_tar")
         extract_zip(filename)
     elif filetype == "dir":
-        print("Deal with directory")
+        print("Eventually deal with dir")
     else:
         print("error with file type in extract()")
         sys.exit()
 
 
 
-### Extraction Functions ###
 
 
+
+
+## EXTRACT_TAR ##
 def extract_tar(filenametar, comptype):
     """Opens, extracts, and closes tar file that has been compressed with one of gzip, xz, and bzip2.
 
@@ -133,7 +119,6 @@ def extract_tar(filenametar, comptype):
         L (list): the members as a list of TarExFile objects.
     """
     get_metadata = False
-    print("Parsing through the contents of the archive:")
     try:
         with tarfile.open(filenametar, 'r:{}'.format(comptype)) as tar: 
             for f in tar:
@@ -144,10 +129,10 @@ def extract_tar(filenametar, comptype):
                     print(".pub")
     except tarfile.TarError:
         print("Couldn't open tarfile")
+        sys.exit()
 
 
-
-
+## DECODE ##
 def decode(json_file_object):
     """Decodes and extracts contents of the metadata.json file.
 
@@ -156,17 +141,9 @@ def decode(json_file_object):
     Returns:
         None
     """
-    print("JSON file object sent to decode()")
-    try:
-        json_contents_in_dictionary = json.JSONDecoder(json_file_object)
-        print("json contents:")
-        print(json_contents_in_dictionary)
-    except json.JSONDecodeError():
-        print("Unable to decode json file object")
-        sys.exit()
 
-
-
+    jstr = bytes.decode(json_file_object.read())
+    json_data_in_dictionary = json.loads(jstr)
 
 
 
@@ -197,10 +174,14 @@ def extract_zip(zipfilename):
         L (list): the members of the archive extracted as file objects.
    """
     try:
-        L = []
         with zipfile.ZipFile(zipfilename) as myzip:
             for n in myzip.namelist():
-                L.append(myzip.open(n))
+                if os.path.basename(n) == "metadata.json":
+                    decode(myzip.extract(n))
+                elif os.path.basename(n).endswith('.pub'):
+                    print(".pub")
+                else:
+                    print("other")
     except zipfile.BadZipFile:
        print("Couldn't extract zip file")
 
