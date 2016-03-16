@@ -5,7 +5,7 @@ import sys
 import subprocess
 
 def no_name():
-    """Handles case where there are no arguments.
+    """Confirms destruction of jail when no jail name has been given.
 
     Args:
         None
@@ -21,20 +21,20 @@ def no_name():
     for jail in jail_names:
         print("{} is allocated for destruction".format(jail))
 
-    if(input("Destroy all of them? [y/n] ") == 'y'):
+    if input("Destroy all of them? [y/N] ") == 'y':
         for jail in jail_names:
             destroy_jail(jail)
         sys.exit(1)
-    elif(input("Destroy them individually? [y/n] ") == 'y'):
+    elif input("Destroy them individually? [y/N] ") == 'y':
         for jail in jail_names:
-            if(input("Destroy {}? [y/n] ".format(jail)) == 'y'):
+            if input("Destroy {}? [y/N] ".format(jail)) == 'y':
                 destroy_jail(jail)
     else:
         print("You chose not to destroy any jails")
         sys.exit(1)
 
 def given_name(jail_name):
-    """Handles case when jail name is passed in.
+    """Confirms destruction of jail when jail name has been given.
 
     If the user is sure they want to destroy the jail then destroy_jail is called.
 
@@ -44,7 +44,7 @@ def given_name(jail_name):
     Returns:
         None
     """
-    if(input("Destroy {}? [y/n] ".format(jail_name)) == 'y'):
+    if input("Destroy {}? [y/N] ".format(jail_name)) == "y":
         destroy_jail(jail_name)
     else:
         print("You chose not to destroy {}".format(jail_name))
@@ -62,13 +62,12 @@ def destroy_jail(jail_name):
     Returns:
         None
     """
-    if(input("[WARNING]: This will destroy ALL jail data for {}. Are you sure? [y/n] ".format(jail_name)) == 'y'):
+    if input("[WARNING]: This will destroy ALL jail data for {}. Are you sure? [y/N] ".format(jail_name)) == 'y':
         print("Destroying " + jail_name)
         stop_jail(jail_name)
         zfs_destroy(jail_name)
         remove_fstab(jail_name)
-        #edit the jail.conf file
-        print("edit the /etc/jail.conf file and remove portion relating to {}".format(jail_name))
+        edit_jailconf_file(jail_name)
 
 def stop_jail(jail_name):
     """Stops the jail.
@@ -116,6 +115,19 @@ def remove_fstab(jail_name):
     fstab_path = "/etc/fstab." + jail_name
     rm_fstab = ["rm", fstab_path]
     subprocess.run(rm_fstab)
+
+def edit_jailconf_file(jail_name):
+    """Goes into /etc/jail.conf and removes corresponding entry to a given jail name
+
+    Note: this function is currently a placeholder
+
+    Args:
+        jail_name (str): the jail that is being deleted
+
+    Returns:
+        None
+    """
+    print("edit the /etc/jail.conf file and remove the portion relating to {}".format(jail_name))
 
 if __name__ == '__main__':
     if(len(sys.argv) == 1):
