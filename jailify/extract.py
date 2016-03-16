@@ -33,9 +33,9 @@ def main(argv):
     file_type = inspect_file(file_name)
 
     # Extract based on file type
-    file_contents = extract(file_type, file_name)
-    print("Contents from archive: ")
-    print(file_contents)
+    extract(file_type, file_name)
+
+
 
 
 def check_title(filename):
@@ -47,7 +47,7 @@ def check_title(filename):
         teamname (str): name of the team, which is file name minus the file
                         extension
     """
-    if os.path.isfile(filename):
+    if os.path.isfile(filename) or os.path.isdir(filename):
         teamname = os.path.splitext(filename)[0]
         return teamname
     else:
@@ -95,16 +95,15 @@ def extract(filetype, filename):
     """
 
     if filetype == "bz2" or filetype == "gz" or filetype == "xz":
-        filelist = extract_tar(filename, filetype)
+        extract_tar(filename, filetype)
     elif filetype == "zip":
-        filelist = extract_zip(filename)
+        extract_zip(filename)
     elif filetype == "dir":
         print("Deal with directory")
     else:
         print("error with file type in extract()")
         sys.exit()
 
-    return filelist
 
 
 ### Extraction Functions ###
@@ -121,11 +120,13 @@ def extract_tar(filenametar, comptype):
         L (list): the members as a list of TarExFile objects.
     """
     try:
-        L = []
         with tarfile.open(filenametar, 'r:{}'.format(comptype)) as tar: 
-            for n in tar.getnames():
-                L.append(tar.extractfile(n))
-        return L
+            for f in tar:
+                if os.path.basename(f.name) == "metadata.json":
+                    data = tar.extractfile(f).read()
+                    print(data)
+                elif os.path.basename(f.name).endswith('.pub'):
+                    print(".pub")
     except tarfile.TarError:
         print("Couldn't open tarfile")
 
@@ -143,7 +144,6 @@ def extract_zip(zipfilename):
         with zipfile.ZipFile(zipfilename) as myzip:
             for n in myzip.namelist():
                 L.append(myzip.open(n))
-        return L
     except zipfile.BadZipFile:
        print("Couldn't extract zip file")
 
