@@ -3,6 +3,8 @@ import sys
 import os.path
 import datetime
 import subprocess
+from jailify.util import do_command
+from jailify.util import do_command_with_return
 
 def add_group(jail, group):
     """Creates a group within the given jail.
@@ -14,7 +16,7 @@ def add_group(jail, group):
     Returns:
         None
     """
-    command = ('sudo', 'jexec', jail, 'pw', 'groupadd', group)
+    command = ('jexec', jail, 'pw', 'groupadd', group)
     do_command(command)
 
 
@@ -39,7 +41,6 @@ def add_user(jail, user, group, gecos, groups=["wheel"],
         None
     """
     command = (
-        'sudo',
         'jexec',
         jail,
         'pw',
@@ -53,57 +54,54 @@ def add_user(jail, user, group, gecos, groups=["wheel"],
         '-s', shell,
         '-w', passwd_method
     )
-    do_command(command)
+    message_body = do_command_with_return(command)
+    message_body = "Your password is {}".format(message_body.strip('\n'))
+    send_msg(jail, user, message_body)
 
 
-def set_password_expiration(jail, user):
+def set_password_expiration(jail, user, duration=120):
     """Sets the account expiration to 120 days after creation.
 
     Args:
         jail (str): The current jail to make the modification in.
         user (str): The user to set the password expiration date on.
+        duration (int): The number of days before the password expires.
 
     Returns:
         None
     """
-    duration = 120
     exp_date = datetime.date.today() + datetime.timedelta(duration)
     exp_date = exp_date.strftime('%m-%b-%Y')
-    command = ('sudo', 'jexec', jail, 'pw', 'usermod', '-p', exp_date, '-n', user)
+    command = ('jexec', jail, 'pw', 'usermod', '-p', exp_date, '-n', user)
     do_command(command)
 
 
-def do_command(command):
-    """Executes command and error handles when applicable.
-
-    Args:
-        command (tuple): The command that needs to be executed.
-
-    Returns:
-        None
-    """
-    try:
-        subprocess.check_call(command)
-    except subprocess.CalledProcessError as e:
-        sys.exit(e.output)
-
-
-def send_msg():
+def send_msg(jail, user, body, subject="Welcome"):
     """Uses information from adduser cmdline progrm to send
-    a user mail that can be checked during their first login
+       a user mail that can be checked during their first login
 
     Args:
-        None
+        jail (str): The current jail to be sending a message in.
+        user (str): Name of user to send message to.
+        subject (str): Header of mail to be sent to the user.
+        body (str): The message body to be sent to the user.
 
     Returns:
         None
     """
-    pass
+    command = ('jexec', jail, 'mail', '-s', subject, user)
+    try:
+        process = subprocess.Popen(command, stdin=subprocess.PIPE)
+    except Exception as e:
+        sys.exit(e.output)
+    process.communicate(bytes(body, 'UTF-8'))
+    print("Sent mail to {}.".format(user))
 
 
-def add_key(jail, user):
+def add_key(jail, user, key, jail_root="/usr/jail/", home_dir="usr/home/",
+            auth_key_path=".ssh/authorized_keys"):
     """Places public key into authorized_keys inside the .ssh
-    folder.
+       folder.
 
     Args:
         path_to_key (str): Path to the location where the pub key lives.
@@ -113,16 +111,13 @@ def add_key(jail, user):
     Returns:
         None
     """
-    path_to_key = "/home/***REMOVED***/{}/{}.pub".format(jail, user)
-    print("{}".format(path_to_key))
-
-    jail_root = "/usr/jail/"
-    home_dir = "usr/home/"
-    auth_key_path = ".ssh/authorized_keys"
-    
-    path = os.path.join(jail_root, jail, home_dir, user, auth_key_path)
-    
-    print("{}".format(path))
+    path_to_file = os.path.join(jail_root, jail, home_dir, user, auth_key_path)
+    if os.path.isfile(path_to_file):
+        with open(path_to_file, "a") as f:
+            if f.write(key) <= 0:
+                sys.exit("jailify: error: Could not write to authorized_keys file.")
+    else:
+        sys.exit("jailify: error: The file {} does not exist.".format(path_to_file))
 
 
 if __name__ == '__main__':
@@ -132,8 +127,9 @@ if __name__ == '__main__':
     user_groups = ["test01", "test02", "test03", "test04"]
     user_names = ["test01", "test02", "test03", "test04"]
     user_gecos = ["test 01", "test 02", "test 03", "test 04"]
+    user_keys = ["djkaafd01", "jksda02", "jasdjk03", "jkdakh04"]
 
-    for user, group, gecos  in zip(user_names, user_groups, user_gecos):
+    for user, group, gecos, key  in zip(user_names, user_groups, user_gecos, user_keys):
         print("Adding {} as a group.".format(group))
         add_group(jail, group)
         print("Adding {} as a user.".format(user))
@@ -141,4 +137,4 @@ if __name__ == '__main__':
         print("Setting password expiration date for {}".format(user))
         set_password_expiration(jail, user)
         print("Placing ssh-keys for {}".format(user))
-        drop_keys(jail, user)
+        add_key(jail, user, key)

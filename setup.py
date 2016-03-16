@@ -12,7 +12,8 @@ setup(
     install_requires=[],
     entry_points={
         'console_scripts': [
-            'jailify=jailify.__main__:main',
+            'jailify=jailify.__main__:jailify_main',
+            'dejailify=jailify.__main__:dejailify_main',
         ],
     },
 )
