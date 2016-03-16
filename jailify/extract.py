@@ -33,21 +33,12 @@ def main(argv):
         print("Incorrect number of arguments")
         sys.exit()
 
-    # Determine and return the file type.
-    file_type = inspect_file(file_name)
-
-    # Extract based on file type
-    extract(file_type, file_name)
+    #Extract based on the file type returned from determine_file_type
+    extract(determine_file_type(file_name),file_name)
 
 
-
-
-
-
-
-
-## INSPECT_FILE ##
-def inspect_file(command_line_argument):
+## DETERMINE_FILE_TYPE ##
+def determine_file_type(file_name):
     """Determines which type of file is given.
 
     Args:
@@ -57,15 +48,15 @@ def inspect_file(command_line_argument):
         file_type (str): aborts if file is not a directory, gzip, zip or xz compressed file.
                          otherwise returns a string representing one of the four types.
     """
-    if os.path.isdir(command_line_argument):
+    if os.path.isdir(file_name):
         file_type = "dir"
-    elif mimetypes.guess_type(command_line_argument)[1] == 'bzip2':
+    elif mimetypes.guess_type(file_name)[1] == 'bzip2':
         file_type = "bz2"
-    elif mimetypes.guess_type(command_line_argument)[1] == 'gzip':
+    elif mimetypes.guess_type(file_name)[1] == 'gzip':
         file_type = "gz"
-    elif zipfile.is_zipfile(command_line_argument):
+    elif zipfile.is_zipfile(file_name):
         file_type = "zip"
-    elif mimetypes.guess_type(command_line_argument)[1] == "xz":
+    elif mimetypes.guess_type(file_name)[1] == "xz":
         file_type = "xz"
     else:
         print("Type is unacceptable")
@@ -88,9 +79,8 @@ def extract(filetype, filename):
         filename (str): the name of the file as provided from the command line.
                         Includes file extension.
     Returns:
-        filelist (list): a list containing extracted file objects from the directory.
+        None
     """
-
     if filetype == "bz2" or filetype == "gz" or filetype == "xz":
         extract_tar(filename, filetype)
     elif filetype == "zip":
@@ -141,30 +131,17 @@ def decode(json_file_object):
     Returns:
         None
     """
-
     jstr = bytes.decode(json_file_object.read())
     json_data_in_dictionary = json.loads(jstr)
+    for i in json_data_in_dictionary:
+        print(i, json_data_in_dictionary[i])
 
 
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+## EXTRACT_ZIP ##
 def extract_zip(zipfilename):
     """Opens, extracts, and closes zip files.
 
@@ -177,7 +154,7 @@ def extract_zip(zipfilename):
         with zipfile.ZipFile(zipfilename) as myzip:
             for n in myzip.namelist():
                 if os.path.basename(n) == "metadata.json":
-                    decode(myzip.extract(n))
+                    decode(myzip.open(n))
                 elif os.path.basename(n).endswith('.pub'):
                     print(".pub")
                 else:
