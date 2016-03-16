@@ -25,7 +25,7 @@ def main(argv):
     # Check for correct number of args and get the file name/path.
     if (len(sys.argv) == 2):
         try:
-            if os.path.isfile(argv[1]) or os.pathisdir(argv[1]):
+            if os.path.isfile(argv[1]) or os.path.isdir(argv[1]):
                 file_name = argv[1]
         except ValueError:
             print("Error with file.")
@@ -86,7 +86,7 @@ def extract(filetype, filename):
     elif filetype == "zip":
         extract_zip(filename)
     elif filetype == "dir":
-        print("Eventually deal with dir")
+        extract_dir(filename)
     else:
         print("error with file type in extract()")
         sys.exit()
@@ -161,6 +161,21 @@ def extract_zip(zipfilename):
                     print("other")
     except zipfile.BadZipFile:
        print("Couldn't extract zip file")
+
+
+## EXTRACT_DIR ##
+def extract_dir(directory):
+    """Retrieves desired metadata and public keys from directory.
+
+    Args:
+        directory (str): name of directory
+    Returns:
+        None
+    """
+    print("This is where I shall extract the directory")
+
+
+
 
 if __name__ == '__main__':
     main(sys.argv)
