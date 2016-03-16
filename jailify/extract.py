@@ -131,7 +131,11 @@ def decode(json_file_object):
     Returns:
         None
     """
-    jstr = bytes.decode(json_file_object.read())
+    if isinstance(json_file_object, bytes):
+        jstr = bytes.decode(json_file_object.read())
+    else:
+        jstr = json_file_object.read()
+
     json_data_in_dictionary = json.loads(jstr)
     for i in json_data_in_dictionary:
         print(i, json_data_in_dictionary[i])
@@ -172,9 +176,15 @@ def extract_dir(directory):
     Returns:
         None
     """
-    print("This is where I shall extract the directory")
-
-
+    pub_keys = {}
+    for subdir, dirs, files in os.walk(directory):
+        for file in files:
+            if os.path.basename(file) == "metadata.json":
+                meta = open(os.path.join(subdir,file),'r')
+                decode(meta)
+                meta.close()
+            elif os.path.basename(file).endswith(".pub"):
+                print("HERE do something with the .pub")
 
 
 if __name__ == '__main__':
