@@ -3,6 +3,7 @@
 import re
 import sys
 import subprocess
+#from util.py import do_command
 
 def no_name():
     """Confirms destruction of jail when no jail name has been given.
@@ -36,7 +37,9 @@ def no_name():
 def given_name(jail_name):
     """Confirms destruction of jail when jail name has been given.
 
-    If the user is sure they want to destroy the jail then destroy_jail is called.
+    First checks to see if the given name is a valid jail name. If it is then
+    it checks if the user is sure they want to destroy the jail. If they are,
+    then destroy_jail is called.
 
     Args:
         jail_name (str): the name of the jail that is to be destroyed
@@ -44,17 +47,22 @@ def given_name(jail_name):
     Returns:
         None
     """
-    if input("Destroy {}? [y/N] ".format(jail_name)) == "y":
-        destroy_jail(jail_name)
-    else:
-        print("You chose not to destroy {}".format(jail_name))
-        sys.exit(1)
+    with open('/etc/jail.conf', 'r') as jail_config:
+        for line in jail_config:
+            if line.startswith(jail_name):
+                if input("Destroy {}? [y/N] ".format(jail_name)) == "y":
+                    destroy_jail(jail_name)
+                    sys.exit(1)
+                else:
+                    print("You chose not to destroy {}".format(jail_name))
+                    sys.exit(1)
+    print("{}: error: invalid jail name".format(jail_name))
 
 def destroy_jail(jail_name):
     """Destroys a jail.
 
-    If the user is sure they want to destroy the jail then helper functions are called to
-    destroy the jail.
+    If the user is sure they want to destroy the jail then helper functions are
+    called to destroy the jail.
 
     Args:
         jail_name (str): the name of the jail that is to be destroyed
@@ -81,6 +89,7 @@ def stop_jail(jail_name):
         None
     """
     stop_jail_cmd = ["service", "jail", "stop", jail_name]
+    #do_command(stop_jail_cmd)
     if(subprocess.run(stop_jail_cmd) == 0):
         print("Error stopping the jail")
 
@@ -98,6 +107,7 @@ def zfs_destroy(jail_name):
     print("zfs destroy")
     zfs_path = "zroot/jail/" + jail_name
     zfs_destroy_cmd = ["zfs", "destroy", "zroot/jail/" + jail_name]
+    #do_command(zfs_destroy_cmd)
     subprocess.run(zfs_destroy_cmd)
 
 def remove_fstab(jail_name):
@@ -113,8 +123,9 @@ def remove_fstab(jail_name):
     """
     print("removing fstab")
     fstab_path = "/etc/fstab." + jail_name
-    rm_fstab = ["rm", fstab_path]
-    subprocess.run(rm_fstab)
+    rm_fstab_cmd = ["rm", fstab_path]
+    #do_command(rm_fstab_cmd)
+    subprocess.run(rm_fstab_cmd)
 
 def edit_jailconf_file(jail_name):
     """Goes into /etc/jail.conf and removes corresponding entry to a given jail name
@@ -127,6 +138,20 @@ def edit_jailconf_file(jail_name):
     Returns:
         None
     """
+    with open("/etc/jail.conf", "r+") as jail_conf:
+        jail_conf_iter = iter(jail_conf)
+        for line in jail_conf_iter:
+            if line.startswith(jail_name):
+                while not line.startswith("}"):
+                    line = next(jail_conf_iter)
+                try:
+                    line = next(jail_conf_iter)
+                except StopIteration as e:
+                    raise
+                except Exception as e:
+                    print(e)
+            else:
+                jail_conf.write(line)
     print("edit the /etc/jail.conf file and remove the portion relating to {}".format(jail_name))
 
 if __name__ == '__main__':
