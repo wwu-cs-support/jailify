@@ -23,7 +23,8 @@ def do_command_with_return(command):
         command (tuple): The command that needs to be executed.
 
     Returns:
-        None
+        result(str): A string representation of what the return of
+                     the command executed would be.
     """
     try:
         result = bytes.decode(subprocess.check_output(command))
