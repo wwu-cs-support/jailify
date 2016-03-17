@@ -113,7 +113,7 @@ def extract_tar(filenametar, comptype):
         with tarfile.open(filenametar, 'r:{}'.format(comptype)) as tar: 
             for f in tar:
                 if os.path.basename(f.name) == "metadata.json":
-                    decode(tar.extractfile(f))
+                    metadata = decode(tar.extractfile(f))
                     get_metadata = True
                 elif os.path.basename(f.name).endswith('.pub'):
                     print(".pub")
@@ -132,15 +132,11 @@ def decode(json_file_object):
         None
     """
     if isinstance(json_file_object, bytes):
-        jstr = bytes.decode(json_file_object.read())
+        jstr = bytes.decode(json_file_object)
     else:
         jstr = json_file_object.read()
 
-    json_data_in_dictionary = json.loads(jstr)
-    for i in json_data_in_dictionary:
-        print(i, json_data_in_dictionary[i])
-
-
+    return json.loads(jstr)
 
 
 
@@ -154,15 +150,18 @@ def extract_zip(zipfilename):
     Returns:
         L (list): the members of the archive extracted as file objects.
    """
+    pub_keys = {}
     try:
         with zipfile.ZipFile(zipfilename) as myzip:
             for n in myzip.namelist():
                 if os.path.basename(n) == "metadata.json":
-                    decode(myzip.open(n))
+                    metadata = decode(myzip.open(n).read())
                 elif os.path.basename(n).endswith('.pub'):
-                    print(".pub")
-                else:
-                    print("other")
+                    username = os.path.splitext(os.path.basename(n))[0]
+                    key = myzip.open(n).read()
+                    pub_keys[username] = key
+    print(pub_keys.keys())
+
     except zipfile.BadZipFile:
        print("Couldn't extract zip file")
 
@@ -181,10 +180,25 @@ def extract_dir(directory):
         for file in files:
             if os.path.basename(file) == "metadata.json":
                 meta = open(os.path.join(subdir,file),'r')
-                decode(meta)
+                metadata = decode(meta)
                 meta.close()
             elif os.path.basename(file).endswith(".pub"):
-                print("HERE do something with the .pub")
+                username = os.path.splitext(file)[0]
+                key = open(os.path.join(subdir, file), 'r')
+                pub_keys[username] = key.read()
+
+
+    #put pub_keys into metadata
+    for k in pub_keys.keys():
+        for m in metadata["teamMembers"]:
+            if k == m["username"]:
+                if pub_keys[k].endswith("\n"):
+                    pub_keys[k] = pub_keys[k][:-1]
+                m["publicKey"] = pub_keys[k]
+
+    print(metadata["teamMembers"][2])
+
+
 
 
 if __name__ == '__main__':
