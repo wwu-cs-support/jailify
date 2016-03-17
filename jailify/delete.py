@@ -132,7 +132,8 @@ def remove_fstab(jail_name):
 def edit_jailconf_file(jail_name):
     """Goes into /etc/jail.conf and removes corresponding entry to a given jail name
 
-    Note: TODO delete new line before jail name
+    Note: Currently has to open file twice. A better way to account for extra new line would
+    be to delete the line above the jail name.
 
     Args:
         jail_name (str): the jail that is being deleted
@@ -152,6 +153,16 @@ def edit_jailconf_file(jail_name):
                     found_jail = False
                 continue
             else:
+                print(line.rstrip('\n'))
+
+    with fileinput.input(files=("/etc/jail.conf"), inplace=True) as jail_conf:
+        previous_line = ''
+        for line in jail_conf:
+            if line == '\n' and previous_line == '\n':
+                previous_line = line
+                continue
+            else:
+                previous_line = line
                 print(line.rstrip('\n'))
 
 if __name__ == '__main__':
