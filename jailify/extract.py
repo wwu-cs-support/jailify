@@ -15,7 +15,7 @@ import os.path
 import mimetypes
 
 def main(argv):
-    """Check for correct number args, determine file type, extract 
+    """Check for correct number args, determine file type, extract
        file, extract data from file.
 
     Args:
@@ -97,7 +97,7 @@ def extract_tar(filenametar, comptype):
     """Opens, extracts, and closes tar file that has been compressed with one of gzip, xz, and bzip2.
 
     Args:
-        filenametar (str): the name of the file as provided on the command 
+        filenametar (str): the name of the file as provided on the command
                            line.
         comptype    (str): the compression type (bzip2, gzip or xz) to be passed in when decompressing.
     Returns:
@@ -106,7 +106,7 @@ def extract_tar(filenametar, comptype):
     get_metadata = False
     pub_keys = {}
     try:
-        with tarfile.open(filenametar, 'r:{}'.format(comptype)) as tar: 
+        with tarfile.open(filenametar, 'r:{}'.format(comptype)) as tar:
             for f in tar:
                 if os.path.basename(f.name) == "metadata.json":
                     metadata = decode(tar.extractfile(f).read())
