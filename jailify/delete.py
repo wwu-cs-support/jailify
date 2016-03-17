@@ -2,6 +2,7 @@
 
 import re
 import sys
+import fileinput
 import subprocess
 #from util.py import do_command
 
@@ -49,7 +50,7 @@ def given_name(jail_name):
     """
     with open('/etc/jail.conf', 'r') as jail_config:
         for line in jail_config:
-            if line.startswith(jail_name):
+            if line.split(' ', 1)[0] == jail_name:
                 if input("Destroy {}? [y/N] ".format(jail_name)) == "y":
                     destroy_jail(jail_name)
                     sys.exit(1)
@@ -130,7 +131,7 @@ def remove_fstab(jail_name):
 def edit_jailconf_file(jail_name):
     """Goes into /etc/jail.conf and removes corresponding entry to a given jail name
 
-    Note: this function is currently a placeholder
+    Note: TODO delete new line before jail name
 
     Args:
         jail_name (str): the jail that is being deleted
@@ -138,21 +139,19 @@ def edit_jailconf_file(jail_name):
     Returns:
         None
     """
-    with open("/etc/jail.conf", "r+") as jail_conf:
-        jail_conf_iter = iter(jail_conf)
-        for line in jail_conf_iter:
-            if line.startswith(jail_name):
-                while not line.startswith("}"):
-                    line = next(jail_conf_iter)
-                try:
-                    line = next(jail_conf_iter)
-                except StopIteration as e:
-                    raise
-                except Exception as e:
-                    print(e)
+    print("editing jail.conf file")
+    found_jail = False
+    with fileinput.input(files=("/home/***REMOVED***/jailify/testfile.txt"), inplace=True) as jail_conf:
+        for line in jail_conf:
+            if line.split(' ', 1)[0] == jail_name:
+                found_jail = True
+                continue
+            elif found_jail:
+                if line.startswith("}"):
+                    found_jail = False
+                continue
             else:
-                jail_conf.write(line)
-    print("edit the /etc/jail.conf file and remove the portion relating to {}".format(jail_name))
+                print(line.rstrip('\n'))
 
 if __name__ == '__main__':
     if(len(sys.argv) == 1):
