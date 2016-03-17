@@ -32,8 +32,7 @@ def main(argv):
         except ValueError:
             print("Error with file.")
     else:
-        print("Incorrect number of arguments")
-        sys.exit()
+        sys.exit("Incorrect number of arguments")
 
     #Extract based on the file type returned from determine_file_type
     metadata = extract(determine_file_type(file_name),file_name)
@@ -63,8 +62,7 @@ def determine_file_type(file_name):
     elif mimetypes.guess_type(file_name)[1] == "xz":
         file_type = "xz"
     else:
-        print("Type is unacceptable")
-        sys.exit()
+        sys.exit("Type is unacceptable")
 
     return file_type
 
@@ -88,8 +86,7 @@ def extract(filetype, filename):
     elif filetype == "dir":
         mdata = extract_dir(filename)
     else:
-        print("error with file type in extract()")
-        sys.exit()
+        sys.exit("error with file type in extract()")
     return mdata
 
 ## EXTRACT_TAR ##
@@ -123,8 +120,7 @@ def extract_tar(filenametar, comptype):
                     m["publicKey"] = pub_keys[k]
         return metadata
     except tarfile.TarError:
-        print("Couldn't open tarfile")
-        sys.exit()
+        sys.exit("Couldn't open tarfile")
 
 ## EXTRACT_ZIP ##
 def extract_zip(zipfilename):
@@ -153,7 +149,7 @@ def extract_zip(zipfilename):
                     m["publicKey"] = pub_keys[k]
         return metadata
     except zipfile.BadZipFile:
-       print("Couldn't extract zip file")
+       sys.exit("Couldn't extract zip file")
 
 
 ## EXTRACT_DIR ##
@@ -200,7 +196,7 @@ def decode(json_file_object):
             jstr = json_file_object.read()
         return json.loads(jstr)
     except ValueError:
-        print("Decoding JSON has failed")
+        sys.exit("Decoding JSON has failed")
 
 ## VALIDATE ##
 def validate(metadata):
@@ -218,11 +214,9 @@ def validate(metadata):
         if match:
             pass
         else:
-            print("hostname invalid")
-            sys.exit()
+            sys.exit("hostname invalid")
     else:
-        print("incorrect metadata parameters")
-        sys.exit()
+        sys.exit("incorrect metadata parameters")
     ## validate team members##
     teamMembers = metadata["teamMembers"]
     for member in teamMembers:
@@ -231,11 +225,9 @@ def validate(metadata):
                 member["username"] == member["publicKey"].split()[-1]):
                 pass
             else:
-                print("validation failed")
-                sys.exit()
+                sys.exit("validation failed")
         except KeyError:
-            print("validation failed - key error")
-            sys.exit()
+            sys.exit("validatios failed - key error")
 
 if __name__ == '__main__':
     main(sys.argv)
