@@ -4,8 +4,8 @@ import sys
 import os.path
 import ipaddress
 import subprocess
-#from util.py import do_command
-#from util.py import do_command_with_return
+from util import do_command
+from util import do_command_with_return
 
 def get_interface():
     """Finds the correct interface.
@@ -19,12 +19,8 @@ def get_interface():
     Returns:
         interface (str): correct interface
     """
-    #cmd = ('ifconfig') 
-    #output = do_command_with_return(cmd)
-    try:
-        output = bytes.decode(subprocess.check_output('ifconfig'))
-    except subprocess.CalledProcessError as e:
-        sys.exit(e.output)
+    cmd = ('ifconfig') 
+    output = do_command_with_return(cmd)
 
     interfaces = [i for i in re.findall(r'(^\S*):', output, re.M) if i != 'lo0']
     if(len(interfaces) == 1):
@@ -66,11 +62,8 @@ def get_latest_snapshot():
         latest_snapshot (str): a string of the name of the latest snapshot
     """
     cmd = ["zfs", "list", "-t", "snapshot"]
-    #zfs_output = do_command_with_return(cmd)
-    try:
-        zfs_output = subprocess.check_output(cmd)
-    except subprocess.CalledProcessError as e:
-        sys.exit(e.output)
+    zfs_output = do_command_with_return(cmd)
+
     snapshot_list = re.findall('(?<=@)\S*', str(zfs_output))
     latest_snapshot = snapshot_list[-1]
     return latest_snapshot
@@ -146,13 +139,9 @@ def clone_base_jail(snapshot, jail_name):
     snapshot_path = "{}{}@{}".format(path, jail_version, snapshot)
     jail_path = os.path.join(path, jail_name)
 
-    #cmd = ["zfs", "clone", snapshot_path, jail_path]
-    #do_command(cmd)
-    try:
-        subprocess.check_call(["zfs", "clone", snapshot_path, jail_path])
-        print("Success cloning base jail")
-    except subprocess.CalledProcessError as e:
-        sys.exit(e.output)
+    cmd = ["zfs", "clone", snapshot_path, jail_path]
+    do_command(cmd)
+    print("Success cloning base jail")
 
 def start_jail(jail_name):
     """Starts jail by running 'service jail start jail_name' where jail_name is an argument.
@@ -164,11 +153,7 @@ def start_jail(jail_name):
         None
     """
     cmd = ["service", "jail", "start", jail_name]
-    #do_command(cmd)
-    try:
-        subprocess.check_call(cmd)
-    except subprocess.CalledProcessError as e:
-        sys.exit(e.output)
+    do_command(cmd)
 
 if __name__ == '__main__':
     lowest_ip = get_lowest_ip()

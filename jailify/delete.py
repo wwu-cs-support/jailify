@@ -4,7 +4,7 @@ import re
 import sys
 import fileinput
 import subprocess
-#from util.py import do_command
+from util import do_command
 
 def no_name():
     """Confirms destruction of jail when no jail name has been given.
@@ -24,9 +24,12 @@ def no_name():
         print("{} is allocated for destruction".format(jail))
 
     if input("Destroy all of them? [y/N] ") == 'y':
-        for jail in jail_names:
-            destroy_jail(jail)
-        sys.exit(1)
+        if input("This is a really destructive action. Are you sure you want to destroy all jails? [y/N] ") == 'y':
+            for jail in jail_names:
+                destroy_jail(jail)
+            sys.exit(1)
+        else:
+            print("You chose not to destroy all of the jails. Wise decision.")
     elif input("Destroy them individually? [y/N] ") == 'y':
         for jail in jail_names:
             if input("Destroy {}? [y/N] ".format(jail)) == 'y':
@@ -77,6 +80,8 @@ def destroy_jail(jail_name):
         zfs_destroy(jail_name)
         remove_fstab(jail_name)
         edit_jailconf_file(jail_name)
+    else:
+        print("You chose not to destroy {}".format(jail_name))
 
 def stop_jail(jail_name):
     """Stops the jail.
@@ -90,9 +95,7 @@ def stop_jail(jail_name):
         None
     """
     stop_jail_cmd = ["service", "jail", "stop", jail_name]
-    #do_command(stop_jail_cmd)
-    if(subprocess.run(stop_jail_cmd) == 0):
-        print("Error stopping the jail")
+    do_command(stop_jail_cmd)
 
 def zfs_destroy(jail_name):
     """Destroys the jail.
@@ -108,8 +111,7 @@ def zfs_destroy(jail_name):
     print("zfs destroy")
     zfs_path = "zroot/jail/" + jail_name
     zfs_destroy_cmd = ["zfs", "destroy", "zroot/jail/" + jail_name]
-    #do_command(zfs_destroy_cmd)
-    subprocess.run(zfs_destroy_cmd)
+    do_command(zfs_destroy_cmd)
 
 def remove_fstab(jail_name):
     """Removes fstab file.
@@ -125,8 +127,7 @@ def remove_fstab(jail_name):
     print("removing fstab")
     fstab_path = "/etc/fstab." + jail_name
     rm_fstab_cmd = ["rm", fstab_path]
-    #do_command(rm_fstab_cmd)
-    subprocess.run(rm_fstab_cmd)
+    do_command(rm_fstab_cmd)
 
 def edit_jailconf_file(jail_name):
     """Goes into /etc/jail.conf and removes corresponding entry to a given jail name
@@ -141,7 +142,7 @@ def edit_jailconf_file(jail_name):
     """
     print("editing jail.conf file")
     found_jail = False
-    with fileinput.input(files=("/home/***REMOVED***/jailify/testfile.txt"), inplace=True) as jail_conf:
+    with fileinput.input(files=("/etc/jail.conf"), inplace=True) as jail_conf:
         for line in jail_conf:
             if line.split(' ', 1)[0] == jail_name:
                 found_jail = True
