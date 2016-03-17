@@ -5,6 +5,7 @@
 # out the team name from the title of the directory/archive.
 
 import os
+import re
 import sys
 import json
 import tarfile
@@ -35,6 +36,9 @@ def main(argv):
 
     #Extract based on the file type returned from determine_file_type
     metadata = extract(determine_file_type(file_name),file_name)
+
+    validate(metadata)
+
 
 ## DETERMINE_FILE_TYPE ##
 def determine_file_type(file_name):
@@ -196,6 +200,41 @@ def decode(json_file_object):
         return json.loads(jstr)
     except ValueError:
         print("Decoding JSON has failed")
+
+## VALIDATE ##
+def validate(metadata):
+    """Validates the keys, hostname, and team member usernames of the metadata dictionary.
+
+    Args:
+        metadata (dict): metadata in dictionary form
+    Returns:
+        None
+    """
+    ## validate metadata ##
+    if all(k in metadata for k in ("projectName","client","hostname","facultyContact","client","teamMembers")):
+        regex = re.compile('^(?![0-9]+$)(?!-)[a-zA-Z0-9-]{,63}(?<!-)$')
+        match = regex.match(metadata["hostname"])
+        if match:
+            pass
+        else:
+            print("hostname invalid")
+            sys.exit()
+    else:
+        print("incorrect metadata parameters")
+        sys.exit()
+    ## validate team members##
+    teamMembers = metadata["teamMembers"]
+    for member in teamMembers:
+        try:
+            if (all(k in member for k in ("username","publicKey","email","name")) and
+                member["username"] == member["publicKey"].split()[-1]):
+                pass
+            else:
+                print("validation failed")
+                sys.exit()
+        except KeyError:
+            print("validation failed - key error")
+            sys.exit()
 
 if __name__ == '__main__':
     main(sys.argv)
