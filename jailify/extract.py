@@ -109,14 +109,27 @@ def extract_tar(filenametar, comptype):
         L (list): the members as a list of TarExFile objects.
     """
     get_metadata = False
+    pub_keys = {}
     try:
         with tarfile.open(filenametar, 'r:{}'.format(comptype)) as tar: 
             for f in tar:
                 if os.path.basename(f.name) == "metadata.json":
-                    metadata = decode(tar.extractfile(f))
+                    metadata = decode(tar.extractfile(f).read())
                     get_metadata = True
                 elif os.path.basename(f.name).endswith('.pub'):
-                    print(".pub")
+                    username = os.path.splitext(os.path.basename(f.name))[0]
+                    key = bytes.decode(tar.extractfile(f).read())
+                    pub_keys[username] = key
+        for k in pub_keys.keys():
+            for m in metadata["teamMembers"]:
+                if k == m["username"]:
+                    if pub_keys[k].endswith("\n"):
+                        pub_keys[k] = pub_keys[k][:-1]
+                    m["publicKey"] = pub_keys[k]
+
+
+        print(metadata["teamMembers"][2])
+
     except tarfile.TarError:
         print("Couldn't open tarfile")
         sys.exit()
@@ -131,13 +144,15 @@ def decode(json_file_object):
     Returns:
         None
     """
-    if isinstance(json_file_object, bytes):
-        jstr = bytes.decode(json_file_object)
-    else:
-        jstr = json_file_object.read()
+    try:
+        if isinstance(json_file_object, bytes):
+            jstr = bytes.decode(json_file_object)
+        else:
+            jstr = json_file_object.read()
 
-    return json.loads(jstr)
-
+        return json.loads(jstr)
+    except ValueError:
+        print("Decoding JSON has failed")
 
 
 
@@ -158,10 +173,16 @@ def extract_zip(zipfilename):
                     metadata = decode(myzip.open(n).read())
                 elif os.path.basename(n).endswith('.pub'):
                     username = os.path.splitext(os.path.basename(n))[0]
-                    key = myzip.open(n).read()
+                    key = bytes.decode(myzip.open(n).read())
                     pub_keys[username] = key
-    print(pub_keys.keys())
 
+        for k in pub_keys.keys():
+            for m in metadata["teamMembers"]:
+                if k == m["username"]:
+                    if pub_keys[k].endswith("\n"):
+                        pub_keys[k] = pub_keys[k][:-1]
+                    m["publicKey"] = pub_keys[k]
+        print(metadata["teamMembers"][2])
     except zipfile.BadZipFile:
        print("Couldn't extract zip file")
 
