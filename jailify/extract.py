@@ -19,13 +19,13 @@ def main(argv):
        file, extract data from file.
 
     Args:
-        argv (str): first arg should be the file name.
+        argv (list): first arg should be the file name.
     Returns:
         None
     """
 
     # Check for correct number of args and get the file name/path.
-    if (len(sys.argv) == 2):
+    if (len(argv) == 2):
         try:
             if os.path.isfile(argv[1]) or os.path.isdir(argv[1]):
                 file_name = argv[1]
