@@ -1,8 +1,9 @@
 #***REMOVED*** | ***REMOVED***@wwu.edu | 04 March 2016
 #
-#    The purpose of this program is to determine the file type of a given
-# directory or archive and then extract the archive. It will also pull
-# out the team name from the title of the directory/archive.
+#    The purpose of this program is to extract data from a given tarball or directory. 
+#  It will extract said data package, create a dictionary from the json file and add
+#  all of the public keys into the corresponding team member's section of the dictionary.
+#  The final step is to validate the dictionary that contains all the extracted data.
 
 import os
 import re
