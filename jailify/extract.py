@@ -34,8 +34,7 @@ def main(argv):
         sys.exit()
 
     #Extract based on the file type returned from determine_file_type
-    extract(determine_file_type(file_name),file_name)
-
+    metadata = extract(determine_file_type(file_name),file_name)
 
 ## DETERMINE_FILE_TYPE ##
 def determine_file_type(file_name):
@@ -64,10 +63,6 @@ def determine_file_type(file_name):
 
     return file_type
 
-
-
-
-
 ## EXTRACT ##
 def extract(filetype, filename):
     """Determines what type of extraction should be used on the file and calls
@@ -79,23 +74,18 @@ def extract(filetype, filename):
         filename (str): the name of the file as provided from the command line.
                         Includes file extension.
     Returns:
-        None
+        mdata (dict): the dictionary containig all metadata
     """
     if filetype == "bz2" or filetype == "gz" or filetype == "xz":
-        extract_tar(filename, filetype)
+        mdata = extract_tar(filename, filetype)
     elif filetype == "zip":
-        extract_zip(filename)
+        mdata = extract_zip(filename)
     elif filetype == "dir":
-        extract_dir(filename)
+        mdata = extract_dir(filename)
     else:
         print("error with file type in extract()")
         sys.exit()
-
-
-
-
-
-
+    return mdata
 
 ## EXTRACT_TAR ##
 def extract_tar(filenametar, comptype):
@@ -106,7 +96,7 @@ def extract_tar(filenametar, comptype):
                            line.
         comptype    (str): the compression type (bzip2, gzip or xz) to be passed in when decompressing.
     Returns:
-        L (list): the members as a list of TarExFile objects.
+        metadata (dict): the json contents and public keys combined into a dictionary.
     """
     get_metadata = False
     pub_keys = {}
@@ -126,35 +116,10 @@ def extract_tar(filenametar, comptype):
                     if pub_keys[k].endswith("\n"):
                         pub_keys[k] = pub_keys[k][:-1]
                     m["publicKey"] = pub_keys[k]
-
-
-        print(metadata["teamMembers"][2])
-
+        return metadata
     except tarfile.TarError:
         print("Couldn't open tarfile")
         sys.exit()
-
-
-## DECODE ##
-def decode(json_file_object):
-    """Decodes and extracts contents of the metadata.json file.
-
-    Args:
-        json_file_object (???): the extracted metadata.json file object.
-    Returns:
-        None
-    """
-    try:
-        if isinstance(json_file_object, bytes):
-            jstr = bytes.decode(json_file_object)
-        else:
-            jstr = json_file_object.read()
-
-        return json.loads(jstr)
-    except ValueError:
-        print("Decoding JSON has failed")
-
-
 
 ## EXTRACT_ZIP ##
 def extract_zip(zipfilename):
@@ -163,7 +128,7 @@ def extract_zip(zipfilename):
     Args:
         zipfilename (str): the name of the file as provided on the command line.
     Returns:
-        L (list): the members of the archive extracted as file objects.
+        metadata (dict): the json contents and public keys in a directory
    """
     pub_keys = {}
     try:
@@ -175,14 +140,13 @@ def extract_zip(zipfilename):
                     username = os.path.splitext(os.path.basename(n))[0]
                     key = bytes.decode(myzip.open(n).read())
                     pub_keys[username] = key
-
         for k in pub_keys.keys():
             for m in metadata["teamMembers"]:
                 if k == m["username"]:
                     if pub_keys[k].endswith("\n"):
                         pub_keys[k] = pub_keys[k][:-1]
                     m["publicKey"] = pub_keys[k]
-        print(metadata["teamMembers"][2])
+        return metadata
     except zipfile.BadZipFile:
        print("Couldn't extract zip file")
 
@@ -194,7 +158,7 @@ def extract_dir(directory):
     Args:
         directory (str): name of directory
     Returns:
-        None
+        metadata (dict): the json contents and public keys in a dictionary.
     """
     pub_keys = {}
     for subdir, dirs, files in os.walk(directory):
@@ -207,20 +171,31 @@ def extract_dir(directory):
                 username = os.path.splitext(file)[0]
                 key = open(os.path.join(subdir, file), 'r')
                 pub_keys[username] = key.read()
-
-
-    #put pub_keys into metadata
     for k in pub_keys.keys():
         for m in metadata["teamMembers"]:
             if k == m["username"]:
                 if pub_keys[k].endswith("\n"):
                     pub_keys[k] = pub_keys[k][:-1]
                 m["publicKey"] = pub_keys[k]
+    return metadata
 
-    print(metadata["teamMembers"][2])
+## DECODE ##
+def decode(json_file_object):
+    """Decodes and extracts contents of the metadata.json file.
 
-
-
+    Args:
+        json_file_object (File Object): a file is .open()-ed and .read() into this function.
+    Returns:
+        json.loads(jstr) (dict): the json string read and put into a usable dictionary.
+    """
+    try:
+        if isinstance(json_file_object, bytes):
+            jstr = bytes.decode(json_file_object)
+        else:
+            jstr = json_file_object.read()
+        return json.loads(jstr)
+    except ValueError:
+        print("Decoding JSON has failed")
 
 if __name__ == '__main__':
     main(sys.argv)
