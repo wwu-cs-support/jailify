@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 import click
 import functools
@@ -20,9 +21,10 @@ def root_check(func):
             func(*args, **kwargs)
     return _wrapper
 
+
+@root_check
 @click.command()
 @click.argument('jail_directory', type=click.Path(exists=True, readable=True))
-@root_check
 def jailify_main(jail_directory):
     print("In jailify main and now need to extract stuff".format(jail_directory))
 
@@ -32,29 +34,74 @@ def jailify_main(jail_directory):
 @click.argument('jail_name', required=False)
 def dejailify_main(jail_name):
     if jail_name:
-        destroy_jail(jail_name)
+        jail_name = find_jails(jail_name) 
+        destroy_jail_prompt(jail_name)
     else:
-        print("other things happening.......")
+        jail_names = find_jails(jail_name, all_jails=True)
+        print("The following jails are allocated for destruction:") 
+        for jail in jail_names:
+            print("    - {:^10}".format(jail))
+        destroy = click.confirm("Destroy all of them?", default=False)
+        if destroy:
+            print("Destroying all jails")
+            for jail in jail_names:
+                print("Destroying {}".format(jail))
+                #destroy_jail(jail)
+        else:
+            for jail in jail_names:
+                destroy_jail_prompt(jail, abort_output=False)
 
-##Functionized this so that way it can be used for the mass deletion of jails as
-## since they both need the same prompt patterns
-def destroy_jail(jail_name):
+
+def find_jails(jail_name, all_jails=False):
+    """ finds the necessary jail or jails to be destroyed
+
+    Args:
+        jail_name (str): The name of the jail specified to be destroyed.
+        all_jails (boolean): Whether or not to search for all available
+                             jails. If True find all jails, False find
+                             only the specified jail name.
+    
+    Returns:
+        jail_names (list): List of all jails that can be destroyed.
+        found_jail (str): A valid jail to be destroyed. 
+    """
+    found_jail = None;
+    with open('/etc/jail.conf', 'r') as jail_config:
+        if all_jails:
+            jail_config = jail_config.read()
+            jail_names = re.findall("(.*(?= {))\s*", jail_config) 
+            return jail_names
+        else:
+            for line in jail_config:
+                if line.split(' ', 1)[0] == jail_name:
+                    found_jail = line.split(' ',1)[0]
+            return found_jail
+
+
+def destroy_jail_prompt(jail_name, abort_output=True):
     """ handles confirmation for jail destruction
 
     Args:
         jail_name (str): Name of jail to be destroyed
+        abort_output (boolean): Whether or not abort the program after
+                                a No response. 
 
     Returns:
         None
     """
-    destroy = click.confirm("Destroy {}.***REMOVED***?".format(jail_name), default=False)
-    if destroy:
-        sec_destroy = click.confirm(("[WARNING]: This will destroy ALL jail data for "
-                    "{}.***REMOVED***. ARE you sure?".format(jail_name)), default=False)
-        if sec_destroy:
-            print("destroying {} ...........".format(jail_name))
-        else:
-            sys.exit("dejailify: info: Destruction of {} was aborted.".format(jail_name))
+    if jail_name is None:
+        sys.exit("{}: error: The jail specified cannot be found".format(PROG_NAME))
     else:
-        sys.exit("dejailify: info: Destruction of {} was aborted.".format(jail_name))
-    
+        destroy = click.confirm("Destroy {}.***REMOVED***?".format(jail_name), default=False)
+        if destroy:
+            sec_destroy = click.confirm(("[WARNING]: This will destroy ALL jail data for "
+                    "{}.***REMOVED***. ARE you sure?".format(jail_name)), default=False)
+            if sec_destroy:
+                print("destroying {} ...........".format(jail_name))
+                #destroy_jail(jail_name)
+            else:
+                if abort_output:
+                    sys.exit("{}: info: Destruction of {} was aborted.".format(PROG_NAME, jail_name))
+        else:
+            if abort_output:
+                sys.exit("{}: info: Destruction of {} was aborted.".format(PROG_NAME, jail_name))
