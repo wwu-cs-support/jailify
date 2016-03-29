@@ -15,6 +15,9 @@ import zipfile
 import os.path
 import mimetypes
 
+REQUIRED_KEYS = ("projectName","client","hostname","facultyContact","client","teamMembers")
+REQUIRED_USER_KEYS = ("username","publicKey","email","name")
+
 def main(argv):
     """Check for correct number args, determine file type, extract
        file, extract data from file.
@@ -170,9 +173,6 @@ def extract_dir(directory):
             if os.path.basename(file) == "metadata.json":
                 with open(os.path.join(subdir,file), 'r') as meta:
                     metadata = decode(meta)
-                #meta = open(os.path.join(subdir,file),'r')
-                #metadata = decode(meta)
-                #meta.close()
             elif os.path.basename(file).endswith(".pub"):
                 username = os.path.splitext(file)[0]
                 with open(os.path.join(subdir, file), 'r') as key:
@@ -207,7 +207,8 @@ def decode(json_file_object):
 ## VALIDATE ##
 def validate(metadata):
     """Validates the keys, hostname, and team member usernames of the metadata
-       dictionary.
+       dictionary. Relies on jailify.extract.REQUIRED_KEYS and
+       jailify.extract.REQUIRED_USER_KEYS.
 
     Args:
         metadata (dict): metadata in dictionary form
@@ -215,8 +216,7 @@ def validate(metadata):
         None
     """
     ## validate metadata ##
-    required_fields = ("projectName","client","hostname","facultyContact","client","teamMembers")
-    if all(k in metadata for k in required_fields):
+    if all(k in metadata for k in REQUIRED_KEYS):
         regex = re.compile('^(?![0-9]+$)(?!-)[a-zA-Z0-9-]{,63}(?<!-)$')
         match = regex.match(metadata["hostname"])
         if match:
@@ -226,11 +226,10 @@ def validate(metadata):
     else:
         sys.exit("incorrect metadata parameters")
     ## validate team members##
-    req_fields = ("username","publicKey","email","name")
     teamMembers = metadata["teamMembers"]
     for member in teamMembers:
         try:
-            if (all(k in member for k in req_fields) and
+            if (all(k in member for k in REQUIRED_USER_KEYS) and
                 member["username"] == member["publicKey"].split()[-1]):
                 pass
             else:
