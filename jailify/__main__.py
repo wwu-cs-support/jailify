@@ -33,6 +33,7 @@ def jailify_main(jail_directory):
 @click.command()
 @click.argument('jail_name', required=False)
 def dejailify_main(jail_name):
+    print(jail_name)
     if jail_name:
         confirmed_jail_name = find_jails(jail_name) 
         destroy_jail_prompt(confirmed_jail_name)
@@ -40,18 +41,18 @@ def dejailify_main(jail_name):
         jail_names = find_jails(jail_name=None, all_jails=True)
         print("The following jails are allocated for destruction:") 
         for jail in jail_names:
-            print("    - {:^10}".format(jail))
+            print("    - {:^10}".format(jail[0]))
         destroy = click.confirm("Destroy all of them?", default=False)
         if destroy:
             for jail in jail_names:
-                print("Destroying {}".format(jail))
+                print("Destroying {}".format(jail[0]))
                 #destroy_jail(jail)
         else:
             for jail in jail_names:
-                destroy_jail_prompt(jail, abort_output=False)
+                destroy_jail_prompt(jail[0], abort_output=False)
 
 
-def find_jails(jail_name, all_jails=False):
+def find_jails(jail_name, all_jails=False, path_jails_conf="/etc/jail.conf"):
     """ finds the necessary jail or jails to be destroyed
 
     Args:
@@ -59,21 +60,25 @@ def find_jails(jail_name, all_jails=False):
         all_jails (boolean): Whether or not to search for all available
                              jails. If True find all jails, False find
                              only the specified jail name.
+        path_jails_conf (str): The path to the location of the jail.conf.
     
     Returns:
         jail_names (list): List of all jails that can be destroyed.
-        jail_name (str): A verified name of the jail to be destroyed. 
+        found_jail (str): A verified name of the jail to be destroyed. 
     """
     found_jail = None
-    with open('/etc/jail.conf', 'r') as jail_config:
+    with open(path_jails_conf, 'r') as jail_config:
         if all_jails:
             jail_config = jail_config.read()
-            jail_names = re.findall("(.*(?= {))\s*", jail_config) 
+            jail_names = re.findall("^(\S*(?=\s*{))[^}]*(^})", jail_config, re.M | re.S)
+            print(jail_names)
             return jail_names
         else:
             for line in jail_config:
-                if line.split(' ', 1)[0] == jail_name:
-                    found_jail = line.split(' ',1)[0]
+                test = line.split('{', 1)[0]
+                print(test)
+                if test == jail_name:
+                    found_jail = test
             return found_jail
 
 
@@ -93,14 +98,14 @@ def destroy_jail_prompt(jail_name, abort_output=True):
     else:
         destroy = click.confirm("Destroy {}.***REMOVED***?".format(jail_name), default=False)
         if destroy:
-            sec_destroy = click.confirm(("[WARNING]: This will destroy ALL jail data for "
+            confirm_destroy = click.confirm(("[WARNING]: This will destroy ALL jail data for "
                     "{}.***REMOVED***. ARE you sure?".format(jail_name)), default=False)
-            if sec_destroy:
+            if confirm_destroy:
                 print("destroying {} ...........".format(jail_name))
+                #Progress bar for destruction.
                 #destroy_jail(jail_name)
-            else:
-                if abort_output:
-                    sys.exit("{}: info: Destruction of {} was aborted.".format(PROG_NAME, jail_name))
+            if abort_output:
+                sys.exit("{}: info: Destruction of {} was aborted.".format(PROG_NAME, jail_name))
         else:
             if abort_output:
                 sys.exit("{}: info: Destruction of {} was aborted.".format(PROG_NAME, jail_name))
