@@ -121,11 +121,8 @@ def extract_tar(filenametar, comptype):
                     username = os.path.splitext(os.path.basename(f.name))[0]
                     key = bytes.decode(tar.extractfile(f).read())
                     pub_keys[username] = key
-        for k in pub_keys.keys():
-            for m in metadata["teamMembers"]:
-                if k == m["username"]:
-                    pub_keys[k] = pub_keys[k].strip()
-                    m["publicKey"] = pub_keys[k]
+        
+        metadata = distribute(pub_keys,metadata)
         return metadata
     except tarfile.TarError:
         sys.exit("Couldn't open tarfile")
@@ -152,11 +149,7 @@ def extract_zip(zipfilename):
                     username = os.path.splitext(os.path.basename(n))[0]
                     key = bytes.decode(myzip.open(n).read())
                     pub_keys[username] = key
-        for k in pub_keys.keys():
-            for m in metadata["teamMembers"]:
-                if k == m["username"]:
-                    pub_keys[k] = pub_keys[k].strip()
-                    m["publicKey"] = pub_keys[k]
+        metadata = distribute(pub_keys, metadata)
         return metadata
     except zipfile.BadZipFile:
        sys.exit("Couldn't extract zip file")
@@ -184,11 +177,8 @@ def extract_dir(directory):
                 username = os.path.splitext(file)[0]
                 with open(os.path.join(subdir, file), 'r') as key:
                     pub_keys[username] = key.read()
-    for k in pub_keys.keys():
-        for m in metadata["teamMembers"]:
-            if k == m["username"]:
-                pub_keys[k] = pub_keys[k].strip()
-                m["publicKey"] = pub_keys[k]
+
+    metadata = distribute(pub_keys, metadata)
     return metadata
 
 
@@ -200,6 +190,7 @@ def distribute(pub_keys, metadata):
                 if k == m["username"]:
                     pub_keys[k] = pub_keys[k].strip()
                     m["publicKey"] = pub_keys[k]
+        return metadata
     except KeyError:
         sys.exit("malformed JSON gave incorrect public keys")
 
