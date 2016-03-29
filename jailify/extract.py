@@ -210,9 +210,7 @@ def validate(metadata):
     if all(k in metadata for k in REQUIRED_KEYS):
         regex = re.compile('^(?![0-9]+$)(?!-)[a-zA-Z0-9-]{,63}(?<!-)$')
         match = regex.match(metadata["hostname"])
-        if match:
-            pass
-        else:
+        if not match:
             sys.exit("hostname invalid")
     else:
         sys.exit("incorrect metadata parameters")
@@ -220,10 +218,8 @@ def validate(metadata):
     teamMembers = metadata["teamMembers"]
     for member in teamMembers:
         try:
-            if (all(k in member for k in REQUIRED_USER_KEYS) and
+            if not (all(k in member for k in REQUIRED_USER_KEYS) and
                 member["username"] == member["publicKey"].split()[-1]):
-                pass
-            else:
                 sys.exit("validation failed")
         except KeyError:
             sys.exit("validatios failed - key error")
