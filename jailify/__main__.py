@@ -68,18 +68,17 @@ def find_jails(jail_name, all_jails=False, path_jails_conf="/etc/jail.conf"):
     """
     found_jail = None
     with open(path_jails_conf, 'r') as jail_config:
+        jail_config = jail_config.read()
         if all_jails:
-            jail_config = jail_config.read()
             jail_names = re.findall("^(\S*(?=\s*{))[^}]*(^})", jail_config, re.M | re.S)
-            print(jail_names)
             return jail_names
         else:
-            for line in jail_config:
-                test = line.split('{', 1)[0]
-                print(test)
-                if test == jail_name:
-                    found_jail = test
-            return found_jail
+            regex = "^(%s(?=\s*\{))[^\}]*(^\})" % (jail_name)
+            match= re.search(regex, jail_config, re.M | re.S)
+            if match:
+                found_jail = match.groups()[0]
+                if found_jail == jail_name:
+                    return found_jail
 
 
 def destroy_jail_prompt(jail_name, abort_output=True):
