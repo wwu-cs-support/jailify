@@ -1,9 +1,10 @@
 #***REMOVED*** | ***REMOVED***@wwu.edu | 04 March 2016
 #
-#    The purpose of this program is to extract data from a given tarball or directory. 
-#  It will extract said data package, create a dictionary from the json file and add
-#  all of the public keys into the corresponding team member's section of the dictionary.
-#  The final step is to validate the dictionary that contains all the extracted data.
+#    The purpose of this program is to extract data from a given tarball or
+#  directory. It will extract said data package, create a dictionary from the
+#  json file and add all of the public keys into the corresponding team
+#  member's section of the dictionary. The final step is to validate the
+#  dictionary that contains all the extracted data.
 
 import os
 import re
@@ -48,8 +49,9 @@ def determine_file_type(file_name):
         command_line_argument (str): the name of the file given on the command
                                      line.
     Returns:
-        file_type (str): aborts if file is not a directory, gzip, zip or xz compressed file.
-                         otherwise returns a string representing one of the four types.
+        file_type (str): aborts if file is not a directory, gzip, zip or xz
+                         compressed file. Otherwise returns a string
+                         representing one of the four types.
     """
     if os.path.isdir(file_name):
         file_type = "dir"
@@ -69,11 +71,11 @@ def determine_file_type(file_name):
 ## EXTRACT ##
 def extract(filetype, filename):
     """Determines what type of extraction should be used on the file and calls
-       the appropriate extract function. Then returns the directory to be worked
-       with.
+       the appropriate extract function. Then returns the directory to be 
+       worked with.
 
     Args:
-        filetype (str): the type of file. 'dir', 'zip', 'xz', 'bzip2' or 'gzip'.
+        filetype (str): the type of file. 'dir', 'zip', 'xz', 'bzip2' or 'gzip'
         filename (str): the name of the file as provided from the command line.
                         Includes file extension.
     Returns:
@@ -91,14 +93,17 @@ def extract(filetype, filename):
 
 ## EXTRACT_TAR ##
 def extract_tar(filenametar, comptype):
-    """Opens, extracts, and closes tar file that has been compressed with one of gzip, xz, and bzip2.
+    """Opens, extracts, and closes tar file that has been compressed with one
+       of gzip, xz, and bzip2.
 
     Args:
         filenametar (str): the name of the file as provided on the command
                            line.
-        comptype    (str): the compression type (bzip2, gzip or xz) to be passed in when decompressing.
+        comptype    (str): the compression type (bzip2, gzip or xz) to be
+                           passed in when decompressing.
     Returns:
-        metadata (dict): the json contents and public keys combined into a dictionary.
+        metadata (dict): the json contents and public keys combined into a
+                         dictionary.
     """
     get_metadata = False
     pub_keys = {}
@@ -115,8 +120,7 @@ def extract_tar(filenametar, comptype):
         for k in pub_keys.keys():
             for m in metadata["teamMembers"]:
                 if k == m["username"]:
-                    if pub_keys[k].endswith("\n"):
-                        pub_keys[k] = pub_keys[k][:-1]
+                    pub_keys[k] = pub_keys[k].strip()
                     m["publicKey"] = pub_keys[k]
         return metadata
     except tarfile.TarError:
@@ -127,7 +131,7 @@ def extract_zip(zipfilename):
     """Opens, extracts, and closes zip files.
 
     Args:
-        zipfilename (str): the name of the file as provided on the command line.
+        zipfilename (str): the name of the file
     Returns:
         metadata (dict): the json contents and public keys in a directory
    """
@@ -144,8 +148,7 @@ def extract_zip(zipfilename):
         for k in pub_keys.keys():
             for m in metadata["teamMembers"]:
                 if k == m["username"]:
-                    if pub_keys[k].endswith("\n"):
-                        pub_keys[k] = pub_keys[k][:-1]
+                    pub_keys[k] = pub_keys[k].strip()
                     m["publicKey"] = pub_keys[k]
         return metadata
     except zipfile.BadZipFile:
@@ -165,18 +168,19 @@ def extract_dir(directory):
     for subdir, dirs, files in os.walk(directory):
         for file in files:
             if os.path.basename(file) == "metadata.json":
-                meta = open(os.path.join(subdir,file),'r')
-                metadata = decode(meta)
-                meta.close()
+                with open(os.path.join(subdir,file), 'r') as meta:
+                    metadata = decode(meta)
+                #meta = open(os.path.join(subdir,file),'r')
+                #metadata = decode(meta)
+                #meta.close()
             elif os.path.basename(file).endswith(".pub"):
                 username = os.path.splitext(file)[0]
-                key = open(os.path.join(subdir, file), 'r')
-                pub_keys[username] = key.read()
+                with open(os.path.join(subdir, file), 'r') as key:
+                    pub_keys[username] = key.read()
     for k in pub_keys.keys():
         for m in metadata["teamMembers"]:
             if k == m["username"]:
-                if pub_keys[k].endswith("\n"):
-                    pub_keys[k] = pub_keys[k][:-1]
+                pub_keys[k] = pub_keys[k].strip()
                 m["publicKey"] = pub_keys[k]
     return metadata
 
@@ -185,9 +189,11 @@ def decode(json_file_object):
     """Decodes and extracts contents of the metadata.json file.
 
     Args:
-        json_file_object (File Object): a file is .open()-ed and .read() into this function.
+        json_file_object (File Object): a file is .open()-ed and .read() into
+                                        this function.
     Returns:
-        json.loads(jstr) (dict): the json string read and put into a usable dictionary.
+        json.loads(jstr) (dict): the json string read and put into a usable
+                                 dictionary.
     """
     try:
         if isinstance(json_file_object, bytes):
@@ -200,7 +206,8 @@ def decode(json_file_object):
 
 ## VALIDATE ##
 def validate(metadata):
-    """Validates the keys, hostname, and team member usernames of the metadata dictionary.
+    """Validates the keys, hostname, and team member usernames of the metadata
+       dictionary.
 
     Args:
         metadata (dict): metadata in dictionary form
@@ -208,7 +215,8 @@ def validate(metadata):
         None
     """
     ## validate metadata ##
-    if all(k in metadata for k in ("projectName","client","hostname","facultyContact","client","teamMembers")):
+    required_fields = ("projectName","client","hostname","facultyContact","client","teamMembers")
+    if all(k in metadata for k in required_fields):
         regex = re.compile('^(?![0-9]+$)(?!-)[a-zA-Z0-9-]{,63}(?<!-)$')
         match = regex.match(metadata["hostname"])
         if match:
@@ -218,10 +226,11 @@ def validate(metadata):
     else:
         sys.exit("incorrect metadata parameters")
     ## validate team members##
+    req_fields = ("username","publicKey","email","name")
     teamMembers = metadata["teamMembers"]
     for member in teamMembers:
         try:
-            if (all(k in member for k in ("username","publicKey","email","name")) and
+            if (all(k in member for k in req_fields) and
                 member["username"] == member["publicKey"].split()[-1]):
                 pass
             else:
