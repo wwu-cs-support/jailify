@@ -26,7 +26,7 @@ def root_check(func):
 @click.command()
 @click.argument('jail_directory', type=click.Path(exists=True, readable=True))
 def jailify_main(jail_directory):
-    print("In jailify main and now need to extract stuff".format(jail_directory))
+    print("Creating jail: {}.***REMOVED***".format(jail_directory.split(".")[0]))
 
 
 @root_check
@@ -34,16 +34,15 @@ def jailify_main(jail_directory):
 @click.argument('jail_name', required=False)
 def dejailify_main(jail_name):
     if jail_name:
-        jail_name = find_jails(jail_name) 
-        destroy_jail_prompt(jail_name)
+        confirmed_jail_name = find_jails(jail_name) 
+        destroy_jail_prompt(confirmed_jail_name)
     else:
-        jail_names = find_jails(jail_name, all_jails=True)
+        jail_names = find_jails(jail_name=None, all_jails=True)
         print("The following jails are allocated for destruction:") 
         for jail in jail_names:
             print("    - {:^10}".format(jail))
         destroy = click.confirm("Destroy all of them?", default=False)
         if destroy:
-            print("Destroying all jails")
             for jail in jail_names:
                 print("Destroying {}".format(jail))
                 #destroy_jail(jail)
@@ -63,9 +62,9 @@ def find_jails(jail_name, all_jails=False):
     
     Returns:
         jail_names (list): List of all jails that can be destroyed.
-        found_jail (str): A valid jail to be destroyed. 
+        jail_name (str): A verified name of the jail to be destroyed. 
     """
-    found_jail = None;
+    found_jail = None
     with open('/etc/jail.conf', 'r') as jail_config:
         if all_jails:
             jail_config = jail_config.read()
@@ -82,7 +81,7 @@ def destroy_jail_prompt(jail_name, abort_output=True):
     """ handles confirmation for jail destruction
 
     Args:
-        jail_name (str): Name of jail to be destroyed
+        jail_name (str): Name of jail to be destroyed.
         abort_output (boolean): Whether or not abort the program after
                                 a No response. 
 
