@@ -41,15 +41,15 @@ def dejailify_main(jail_name):
         jail_names = find_jails(jail_name=None, all_jails=True)
         print("The following jails are allocated for destruction:") 
         for jail in jail_names:
-            print("    - {:^10}".format(jail[0]))
+            print("    - {:^10}".format(jail))
         destroy = click.confirm("Destroy all of them?", default=False)
         if destroy:
             for jail in jail_names:
-                print("Destroying {}".format(jail[0]))
+                print("Destroying {}".format(jail))
                 #destroy_jail(jail)
         else:
             for jail in jail_names:
-                destroy_jail_prompt(jail[0], abort_output=False)
+                destroy_jail_prompt(jail, abort_output=False)
 
 
 def find_jails(jail_name, all_jails=False, path_jails_conf="/etc/jail.conf"):
@@ -70,10 +70,10 @@ def find_jails(jail_name, all_jails=False, path_jails_conf="/etc/jail.conf"):
     with open(path_jails_conf, 'r') as jail_config:
         jail_config = jail_config.read()
         if all_jails:
-            jail_names = re.findall("^(\S*(?=\s*{))[^}]*(^})", jail_config, re.M | re.S)
+            jail_names = re.findall("^((?!#)\S*(?=\s*\{.*\}$))", jail_config, re.M | re.S)
             return jail_names
         else:
-            regex = "^(%s(?=\s*\{))[^\}]*(^\})" % (jail_name)
+            regex = "^((?!#){}(?=\s*\{{.*\}}$))".format(jail_name)
             match= re.search(regex, jail_config, re.M | re.S)
             if match:
                 found_jail = match.groups()[0]
