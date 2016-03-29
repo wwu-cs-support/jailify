@@ -194,12 +194,14 @@ def extract_dir(directory):
 
 ## DISTRIBUTE ##
 def distribute(pub_keys, metadata):
-    for k in pub_keys.keys():
-        for m in metadata["teamMembers"]:
-            if k == m["username"]:
-                pub_keys[k] = pub_keys[k].strip()
-                m["publicKey"] = pub_keys[k]
-
+    try:
+        for k in pub_keys.keys():
+            for m in metadata["teamMembers"]:
+                if k == m["username"]:
+                    pub_keys[k] = pub_keys[k].strip()
+                    m["publicKey"] = pub_keys[k]
+    except KeyError:
+        sys.exit("malformed JSON gave incorrect public keys")
 
 ## VALIDATE ##
 def validate(metadata):
