@@ -113,7 +113,10 @@ def extract_tar(filenametar, comptype):
         with tarfile.open(filenametar, 'r:{}'.format(comptype)) as tar:
             for f in tar:
                 if os.path.basename(f.name) == "metadata.json":
-                    metadata = decode(bytes.decode(tar.extractfile(f).read()))
+                    try:
+                        metadata = json.loads(bytes.decode(tar.extractfile(f).read()))
+                    except ValueError:
+                        sys.exit("Decoding JSON has failed")
                 elif os.path.basename(f.name).endswith('.pub'):
                     username = os.path.splitext(os.path.basename(f.name))[0]
                     key = bytes.decode(tar.extractfile(f).read())
@@ -141,7 +144,10 @@ def extract_zip(zipfilename):
         with zipfile.ZipFile(zipfilename) as myzip:
             for n in myzip.namelist():
                 if os.path.basename(n) == "metadata.json":
-                    metadata = decode(bytes.decode(myzip.open(n).read()))
+                    try:
+                        metadata = json.loads(bytes.decode(myzip.open(n).read()))
+                    except ValueError:
+                        sys.exit("Decoding JSON has failed")
                 elif os.path.basename(n).endswith('.pub'):
                     username = os.path.splitext(os.path.basename(n))[0]
                     key = bytes.decode(myzip.open(n).read())
@@ -170,7 +176,11 @@ def extract_dir(directory):
         for file in files:
             if os.path.basename(file) == "metadata.json":
                 with open(os.path.join(subdir,file), 'r') as meta:
-                    metadata = decode(meta.read())
+                    try:
+                        metadata = json.loads(meta.read())
+                    except ValueError:
+                        sys.exit("Decoding JSON has failed")
+                    #metadata = decode(meta.read())
             elif os.path.basename(file).endswith(".pub"):
                 username = os.path.splitext(file)[0]
                 with open(os.path.join(subdir, file), 'r') as key:
