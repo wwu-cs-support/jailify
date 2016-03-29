@@ -108,14 +108,12 @@ def extract_tar(filenametar, comptype):
         metadata (dict): the json contents and public keys combined into a
                          dictionary.
     """
-    get_metadata = False
     pub_keys = {}
     try:
         with tarfile.open(filenametar, 'r:{}'.format(comptype)) as tar:
             for f in tar:
                 if os.path.basename(f.name) == "metadata.json":
-                    metadata = decode(tar.extractfile(f).read())
-                    get_metadata = True
+                    metadata = decode(bytes.decode(tar.extractfile(f).read()))
                 elif os.path.basename(f.name).endswith('.pub'):
                     username = os.path.splitext(os.path.basename(f.name))[0]
                     key = bytes.decode(tar.extractfile(f).read())
@@ -143,7 +141,7 @@ def extract_zip(zipfilename):
         with zipfile.ZipFile(zipfilename) as myzip:
             for n in myzip.namelist():
                 if os.path.basename(n) == "metadata.json":
-                    metadata = decode(myzip.open(n).read())
+                    metadata = decode(bytes.decode(myzip.open(n).read()))
                 elif os.path.basename(n).endswith('.pub'):
                     username = os.path.splitext(os.path.basename(n))[0]
                     key = bytes.decode(myzip.open(n).read())
@@ -172,7 +170,7 @@ def extract_dir(directory):
         for file in files:
             if os.path.basename(file) == "metadata.json":
                 with open(os.path.join(subdir,file), 'r') as meta:
-                    metadata = decode(meta)
+                    metadata = decode(meta.read())
             elif os.path.basename(file).endswith(".pub"):
                 username = os.path.splitext(file)[0]
                 with open(os.path.join(subdir, file), 'r') as key:
@@ -185,7 +183,7 @@ def extract_dir(directory):
     return metadata
 
 ## DECODE ##
-def decode(json_file_object):
+def decode(jstr):
     """Decodes and extracts contents of the metadata.json file.
 
     Args:
@@ -196,10 +194,6 @@ def decode(json_file_object):
                                  dictionary.
     """
     try:
-        if isinstance(json_file_object, bytes):
-            jstr = bytes.decode(json_file_object)
-        else:
-            jstr = json_file_object.read()
         return json.loads(jstr)
     except ValueError:
         sys.exit("Decoding JSON has failed")
