@@ -180,7 +180,6 @@ def extract_dir(directory):
                         metadata = json.loads(meta.read())
                     except ValueError:
                         sys.exit("Decoding JSON has failed")
-                    #metadata = decode(meta.read())
             elif os.path.basename(file).endswith(".pub"):
                 username = os.path.splitext(file)[0]
                 with open(os.path.join(subdir, file), 'r') as key:
@@ -192,21 +191,15 @@ def extract_dir(directory):
                 m["publicKey"] = pub_keys[k]
     return metadata
 
-## DECODE ##
-def decode(jstr):
-    """Decodes and extracts contents of the metadata.json file.
 
-    Args:
-        json_file_object (File Object): a file is .open()-ed and .read() into
-                                        this function.
-    Returns:
-        json.loads(jstr) (dict): the json string read and put into a usable
-                                 dictionary.
-    """
-    try:
-        return json.loads(jstr)
-    except ValueError:
-        sys.exit("Decoding JSON has failed")
+## DISTRIBUTE ##
+def distribute(pub_keys, metadata):
+    for k in pub_keys.keys():
+        for m in metadata["teamMembers"]:
+            if k == m["username"]:
+                pub_keys[k] = pub_keys[k].strip()
+                m["publicKey"] = pub_keys[k]
+
 
 ## VALIDATE ##
 def validate(metadata):
