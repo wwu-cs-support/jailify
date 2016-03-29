@@ -56,15 +56,16 @@ def determine_file_type(file_name):
                          compressed file. Otherwise returns a string
                          representing one of the four types.
     """
+    mime_type = mimetypes.guess_type(file_name)[1]
     if os.path.isdir(file_name):
         file_type = "dir"
-    elif mimetypes.guess_type(file_name)[1] == 'bzip2':
+    elif mime_type == 'bzip2':
         file_type = "bz2"
-    elif mimetypes.guess_type(file_name)[1] == 'gzip':
+    elif mime_type == 'gzip':
         file_type = "gz"
     elif zipfile.is_zipfile(file_name):
         file_type = "zip"
-    elif mimetypes.guess_type(file_name)[1] == "xz":
+    elif mime_type == "xz":
         file_type = "xz"
     else:
         sys.exit("Type is unacceptable")
