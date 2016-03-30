@@ -203,7 +203,7 @@ def distribute(pub_keys, metadata):
                     m["publicKey"] = pub_keys[k]
         return metadata
     except KeyError:
-        sys.exit("malformed JSON gave incorrect public keys")
+        sys.exit("malformed JSON. Better check that out.")
 
 ## VALIDATE ##
 def validate(metadata):
