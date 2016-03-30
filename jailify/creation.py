@@ -4,8 +4,8 @@ import sys
 import os.path
 import ipaddress
 import subprocess
-from util import do_command
-from util import do_command_with_return
+from jailify.util import do_command
+from jailify.util import do_command_with_return
 
 def get_interface():
     """Finds the correct interface.
