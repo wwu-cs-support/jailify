@@ -6,67 +6,10 @@ import fileinput
 import subprocess
 from jailify.util import do_command
 
-def no_name():
-    """Confirms destruction of jail when no jail name has been given.
-
-    Args:
-        None
-    
-    Returns:
-        None
-    """
-    with open('/etc/jail.conf', 'r') as jail_config:
-        jail_config = jail_config.read()
-
-    jail_names = re.findall("(.*(?= {))\s*", jail_config)
-
-    for jail in jail_names:
-        print("{} is allocated for destruction".format(jail))
-
-    if input("Destroy all of them? [y/N] ") == 'y':
-        if input("This is a really destructive action. Are you sure you want to destroy all jails? [y/N] ") == 'y':
-            for jail in jail_names:
-                destroy_jail(jail)
-            sys.exit(1)
-        else:
-            print("You chose not to destroy all of the jails. Wise decision.")
-    elif input("Destroy them individually? [y/N] ") == 'y':
-        for jail in jail_names:
-            if input("Destroy {}? [y/N] ".format(jail)) == 'y':
-                destroy_jail(jail)
-    else:
-        print("You chose not to destroy any jails")
-        sys.exit(1)
-
-def given_name(jail_name):
-    """Confirms destruction of jail when jail name has been given.
-
-    First checks to see if the given name is a valid jail name. If it is then
-    it checks if the user is sure they want to destroy the jail. If they are,
-    then destroy_jail is called.
-
-    Args:
-        jail_name (str): the name of the jail that is to be destroyed
-
-    Returns:
-        None
-    """
-    with open('/etc/jail.conf', 'r') as jail_config:
-        for line in jail_config:
-            if line.split(' ', 1)[0] == jail_name:
-                if input("Destroy {}? [y/N] ".format(jail_name)) == "y":
-                    destroy_jail(jail_name)
-                    sys.exit(1)
-                else:
-                    print("You chose not to destroy {}".format(jail_name))
-                    sys.exit(1)
-    print("{}: error: invalid jail name".format(jail_name))
-
 def destroy_jail(jail_name):
     """Destroys a jail.
 
-    If the user is sure they want to destroy the jail then helper functions are
-    called to destroy the jail.
+    Helper functions are called to destroy the jail. Assumes user is sure of destruction.
 
     Args:
         jail_name (str): the name of the jail that is to be destroyed
@@ -74,14 +17,11 @@ def destroy_jail(jail_name):
     Returns:
         None
     """
-    if input("[WARNING]: This will destroy ALL jail data for {}. Are you sure? [y/N] ".format(jail_name)) == 'y':
-        print("Destroying " + jail_name)
-        stop_jail(jail_name)
-        zfs_destroy(jail_name)
-        remove_fstab(jail_name)
-        edit_jailconf_file(jail_name)
-    else:
-        print("You chose not to destroy {}".format(jail_name))
+    print("Destroying " + jail_name)
+    stop_jail(jail_name)
+    zfs_destroy(jail_name)
+    remove_fstab(jail_name)
+    edit_jailconf_file(jail_name)
 
 def stop_jail(jail_name):
     """Stops the jail.
@@ -167,8 +107,9 @@ def edit_jailconf_file(jail_name):
 
 if __name__ == '__main__':
     if(len(sys.argv) == 1):
-        no_name()
+        print("No jail specified")
+        sys.exit(1)
     elif(len(sys.argv) == 2):
-        given_name(sys.argv[1])
+        destroy_jail(sys.argv[1])
     else:
         print("Incorrect number of arguments")
