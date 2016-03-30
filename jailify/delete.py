@@ -4,7 +4,7 @@ import re
 import sys
 import fileinput
 import subprocess
-from util import do_command
+from jailify.util import do_command
 
 def no_name():
     """Confirms destruction of jail when no jail name has been given.
@@ -94,7 +94,7 @@ def stop_jail(jail_name):
     Returns:
         None
     """
-    stop_jail_cmd = ["service", "jail", "stop", jail_name]
+    stop_jail_cmd = ("service", "jail", "stop", jail_name)
     do_command(stop_jail_cmd)
 
 def zfs_destroy(jail_name):
@@ -110,7 +110,7 @@ def zfs_destroy(jail_name):
     """
     print("zfs destroy")
     zfs_path = "zroot/jail/" + jail_name
-    zfs_destroy_cmd = ["zfs", "destroy", "zroot/jail/" + jail_name]
+    zfs_destroy_cmd = ("zfs", "destroy", "zroot/jail/" + jail_name)
     do_command(zfs_destroy_cmd)
 
 def remove_fstab(jail_name):
@@ -126,7 +126,7 @@ def remove_fstab(jail_name):
     """
     print("removing fstab")
     fstab_path = "/etc/fstab." + jail_name
-    rm_fstab_cmd = ["rm", fstab_path]
+    rm_fstab_cmd = ("rm", fstab_path)
     do_command(rm_fstab_cmd)
 
 def edit_jailconf_file(jail_name):
