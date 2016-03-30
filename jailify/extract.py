@@ -49,8 +49,8 @@ def determine_file_type(file_name):
     """Determines which type of file is given.
 
     Args:
-        command_line_argument (str): the name of the file given on the command
-                                     line.
+        file_name (str): the name of the file given on the command
+                         line.
     Returns:
         file_type (str): aborts if file is not a directory, gzip, zip or xz
                          compressed file. Otherwise returns a string
@@ -185,6 +185,16 @@ def extract_dir(directory):
 
 ## DISTRIBUTE ##
 def distribute(pub_keys, metadata):
+    """"Takes the public keys contained in pub_keys and distributes them into
+         metadata dictionary for each user.
+
+    Args:
+        pub_keys (dict): the dictionary containing usernames and public keys.
+        metadata (dict): the dictionary containing the extracted metadata.
+    Returns:
+        metadata (dict): the same metadata as before, but with a new field for
+                         each user called "publicKey" & the corresponding key.
+    """
     try:
         for k in pub_keys.keys():
             for m in metadata["teamMembers"]:
