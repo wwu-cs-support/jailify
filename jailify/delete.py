@@ -6,6 +6,18 @@ import fileinput
 import subprocess
 from jailify.util import do_command
 
+class InvalidJailName(Exception):
+    """An exception that is raised when the jail name is invalid.
+
+    Args:
+        message (str): an error message
+
+    Attributes:
+        message (str): an error message
+    """
+    def __init__(self, message):
+        self.message = message
+
 def destroy_jail(jail_name):
     """Destroys a jail.
 
@@ -47,8 +59,14 @@ def zfs_destroy(jail_name):
 
     Returns:
         None
+
+    Raises:
+        InvalidJailName: If ``jail_name`` is falsy this exception is raised
+            to avoid destroying the entire root dataset.
     """
-    print("zfs destroy")
+    if not jail_name:
+        raise InvalidJailName("Jail name cannot be empty")
+
     zfs_path = "zroot/jail/" + jail_name
     zfs_destroy_cmd = ("zfs", "destroy", "zroot/jail/" + jail_name)
     do_command(zfs_destroy_cmd)
