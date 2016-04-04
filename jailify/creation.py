@@ -4,12 +4,14 @@ import sys
 import os.path
 import ipaddress
 import subprocess
+from jailify.util import do_command
+from jailify.util import do_command_with_return
 
 def get_interface():
     """Finds the correct interface.
 
     Finds the lowest interface by using the command ifconfig then searching through
-    the output for the non loopback interface. 
+    the output for the non loopback interface.
 
     Args:
         None
@@ -17,7 +19,9 @@ def get_interface():
     Returns:
         interface (str): correct interface
     """
-    output = bytes.decode(subprocess.check_output(('ifconfig')), 'utf-8')
+    cmd = ('ifconfig') 
+    output = do_command_with_return(cmd)
+
     interfaces = [i for i in re.findall(r'(^\S*):', output, re.M) if i != 'lo0']
     if(len(interfaces) == 1):
         return interfaces[0]
@@ -58,10 +62,11 @@ def get_latest_snapshot():
         latest_snapshot (str): a string of the name of the latest snapshot
     """
     cmd = ["zfs", "list", "-t", "snapshot"]
-    zfs_output = subprocess.run(cmd, stdout=subprocess.PIPE)
+    zfs_output = do_command_with_return(cmd)
+
     snapshot_list = re.findall('(?<=@)\S*', str(zfs_output))
     latest_snapshot = snapshot_list[-1]
-    return latest_snapshot #"p0"
+    return latest_snapshot
 
 def get_lowest_ip():
     """Finds the next available ip address.
@@ -131,16 +136,12 @@ def clone_base_jail(snapshot, jail_name):
     """
     path = "zroot/jail/"
     jail_version = ".base10.2x64"
-    snapshot_path = "{}{}@{}".format(path, jail_version, snapshot) #os.path
+    snapshot_path = "{}{}@{}".format(path, jail_version, snapshot)
     jail_path = os.path.join(path, jail_name)
 
-    #cmd = ["zfs", "clone", snapshot_path, jail_path]
-    #do_command(cmd)
-    try:
-        subprocess.check_call(["zfs", "clone", snapshot_path, jail_path])
-        print("Success cloning base jail")
-    except subprocess.CalledProcessError as e:
-        sys.exit(e.output)
+    cmd = ["zfs", "clone", snapshot_path, jail_path]
+    do_command(cmd)
+    print("Success cloning base jail")
 
 def start_jail(jail_name):
     """Starts jail by running 'service jail start jail_name' where jail_name is an argument.
@@ -152,17 +153,12 @@ def start_jail(jail_name):
         None
     """
     cmd = ["service", "jail", "start", jail_name]
-
-    #do_command(cmd)
-    try:
-        subprocess.check_call(cmd)
-    except subprocess.CalledProcessError as e:
-        sys.exit(e.output)
+    do_command(cmd)
 
 if __name__ == '__main__':
     lowest_ip = get_lowest_ip()
     jail_name = str(sys.argv[1]) #extract.py - teamname
-    interface = get_interface() #"em0" #xn0 on ***REMOVED*** em0 on lion
+    interface = get_interface()
     snapshot = get_latest_snapshot()
     if check_name(jail_name):
         add_entry(lowest_ip, jail_name, interface)

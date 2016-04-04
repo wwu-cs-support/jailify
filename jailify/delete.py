@@ -2,59 +2,26 @@
 
 import re
 import sys
+import fileinput
 import subprocess
+from jailify.util import do_command
 
-def no_name():
-    """Handles case where there are no arguments.
-
-    Args:
-        None
-    
-    Returns:
-        None
-    """
-    with open('/etc/jail.conf', 'r') as jail_config:
-        jail_config = jail_config.read()
-
-    jail_names = re.findall("(.*(?= {))\s*", jail_config)
-
-    for jail in jail_names:
-        print("{} is allocated for destruction".format(jail))
-
-    if(input("Destroy all of them? [y/n] ") == 'y'):
-        for jail in jail_names:
-            destroy_jail(jail)
-        sys.exit(1)
-    elif(input("Destroy them individually? [y/n] ") == 'y'):
-        for jail in jail_names:
-            if(input("Destroy {}? [y/n] ".format(jail)) == 'y'):
-                destroy_jail(jail)
-    else:
-        print("You chose not to destroy any jails")
-        sys.exit(1)
-
-def given_name(jail_name):
-    """Handles case when jail name is passed in.
-
-    If the user is sure they want to destroy the jail then destroy_jail is called.
+class InvalidJailName(Exception):
+    """An exception that is raised when the jail name is invalid.
 
     Args:
-        jail_name (str): the name of the jail that is to be destroyed
+        message (str): an error message
 
-    Returns:
-        None
+    Attributes:
+        message (str): an error message
     """
-    if(input("Destroy {}? [y/n] ".format(jail_name)) == 'y'):
-        destroy_jail(jail_name)
-    else:
-        print("You chose not to destroy {}".format(jail_name))
-        sys.exit(1)
+    def __init__(self, message):
+        self.message = message
 
 def destroy_jail(jail_name):
     """Destroys a jail.
 
-    If the user is sure they want to destroy the jail then helper functions are called to
-    destroy the jail.
+    Helper functions are called to destroy the jail. Assumes user is sure of destruction.
 
     Args:
         jail_name (str): the name of the jail that is to be destroyed
@@ -62,13 +29,11 @@ def destroy_jail(jail_name):
     Returns:
         None
     """
-    if(input("[WARNING]: This will destroy ALL jail data for {}. Are you sure? [y/n] ".format(jail_name)) == 'y'):
-        print("Destroying " + jail_name)
-        stop_jail(jail_name)
-        zfs_destroy(jail_name)
-        remove_fstab(jail_name)
-        #edit the jail.conf file
-        print("edit the /etc/jail.conf file and remove portion relating to {}".format(jail_name))
+    print("Destroying " + jail_name)
+    stop_jail(jail_name)
+    zfs_destroy(jail_name)
+    remove_fstab(jail_name)
+    edit_jailconf_file(jail_name)
 
 def stop_jail(jail_name):
     """Stops the jail.
@@ -81,9 +46,8 @@ def stop_jail(jail_name):
     Returns:
         None
     """
-    stop_jail_cmd = ["service", "jail", "stop", jail_name]
-    if(subprocess.run(stop_jail_cmd) == 0):
-        print("Error stopping the jail")
+    stop_jail_cmd = ("service", "jail", "stop", jail_name)
+    do_command(stop_jail_cmd)
 
 def zfs_destroy(jail_name):
     """Destroys the jail.
@@ -95,11 +59,17 @@ def zfs_destroy(jail_name):
 
     Returns:
         None
+
+    Raises:
+        InvalidJailName: If ``jail_name`` is falsy this exception is raised
+            to avoid destroying the entire root dataset.
     """
-    print("zfs destroy")
+    if not jail_name:
+        raise InvalidJailName("Jail name cannot be empty")
+
     zfs_path = "zroot/jail/" + jail_name
-    zfs_destroy_cmd = ["zfs", "destroy", "zroot/jail/" + jail_name]
-    subprocess.run(zfs_destroy_cmd)
+    zfs_destroy_cmd = ("zfs", "destroy", "zroot/jail/" + jail_name)
+    do_command(zfs_destroy_cmd)
 
 def remove_fstab(jail_name):
     """Removes fstab file.
@@ -114,13 +84,50 @@ def remove_fstab(jail_name):
     """
     print("removing fstab")
     fstab_path = "/etc/fstab." + jail_name
-    rm_fstab = ["rm", fstab_path]
-    subprocess.run(rm_fstab)
+    rm_fstab_cmd = ("rm", fstab_path)
+    do_command(rm_fstab_cmd)
+
+def edit_jailconf_file(jail_name):
+    """Goes into /etc/jail.conf and removes corresponding entry to a given jail name
+
+    Note: Currently has to open file twice. A better way to account for extra new line would
+    be to delete the line above the jail name.
+
+    Args:
+        jail_name (str): the jail that is being deleted
+
+    Returns:
+        None
+    """
+    print("editing jail.conf file")
+    found_jail = False
+    with fileinput.input(files=("/etc/jail.conf"), inplace=True) as jail_conf:
+        for line in jail_conf:
+            if line.split(' ', 1)[0] == jail_name:
+                found_jail = True
+                continue
+            elif found_jail:
+                if line.startswith("}"):
+                    found_jail = False
+                continue
+            else:
+                print(line.rstrip('\n'))
+
+    with fileinput.input(files=("/etc/jail.conf"), inplace=True) as jail_conf:
+        previous_line = ''
+        for line in jail_conf:
+            if line == '\n' and previous_line == '\n':
+                previous_line = line
+                continue
+            else:
+                previous_line = line
+                print(line.rstrip('\n'))
 
 if __name__ == '__main__':
     if(len(sys.argv) == 1):
-        no_name()
+        print("No jail specified")
+        sys.exit(1)
     elif(len(sys.argv) == 2):
-        given_name(sys.argv[1])
+        destroy_jail(sys.argv[1])
     else:
         print("Incorrect number of arguments")
