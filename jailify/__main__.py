@@ -39,17 +39,7 @@ def dejailify_main(jail_name):
         destroy_jail_prompt(confirmed_jail_name)
     else:
         jail_names = find_jails(jail_name=None, all_jails=True)
-        print("The following jails are allocated for destruction:") 
-        for jail in jail_names:
-            print("    - {:^10}".format(jail))
-        destroy = click.confirm("Destroy all of them?", default=False)
-        if destroy:
-            for jail in jail_names:
-                print("Destroying {}".format(jail))
-                #destroy_jail(jail)
-        else:
-            for jail in jail_names:
-                destroy_jail_prompt(jail, abort_output=False)
+        destroy_all_jails_prompt(jail_names)
 
 
 def find_jails(jail_name, all_jails=False, path_jails_conf="/etc/jail.conf"):
@@ -108,3 +98,37 @@ def destroy_jail_prompt(jail_name, abort_output=True):
         else:
             if abort_output:
                 sys.exit("{}: info: Destruction of {} was aborted.".format(PROG_NAME, jail_name))
+
+
+def destroy_all_jails_prompt(jail_names):
+    """ handles confirmation for deletion of all jails
+
+    Args:
+        jail_name
+    Returns:
+        None
+
+    """
+    print("The following jails are allocated for destruction:") 
+    for jail in jail_names:
+        print("    - {:^10}".format(jail))
+    destroy = click.confirm("Destroy all of them?", default=False)
+    if destroy:
+        all_destroy = click.confirm(("[{}]: This will destroy ALL jail data for the above jails."
+        "Are you sure?".format(click.style("WARNING", fg='red'))), default=False)
+        if all_destroy:
+            for jail in jail_names:
+                print("Destroying {}".format(jail))
+                #progress bar for jail destruction
+                #destroy_jail(jail)
+        else:
+            destroy = True
+    elif not destroy:
+        single_destroy = click.confirm("Destroy them individually?", default=False)
+        if single_destroy:
+            for jail in jail_names:
+                destroy_jail_prompt(jail, abort_output=False)
+        else:
+            sys.exit("{}: info: Program terminated, no jails to delete.".format(PROG_NAME))
+
+
