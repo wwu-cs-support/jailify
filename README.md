@@ -1,6 +1,10 @@
-# Jailify
+# Jailify/Dejailify
 
-Create jails for senior project groups based on their provided metadata.
+Create or destroy jails for senior project teams on our senior project jail
+host.
+
+##Dependencies
+`jailify` depends on `python3` being installed.
 
 ## Installation
 Run ..............
@@ -8,42 +12,68 @@ Run ..............
 ## Example Usage
 
 ### `jailify`
+`jailify` is the command used to create new jails for senior project teams. The
+basic usage is this:
 ```
-myusername@hostname:~ % sudo jailify ./greenteam.tgz
+jailify project_dir
+```
+where `jailify` is the name of the command and `project_dir` is the **required**
+path to a directory (which could be either a plain directory _or_ a tarball)
+containing the SSH public keys for each group member. The `project_dir` also
+contains a file which should be called `metadata.json`.
 
-myusername@hostname:~ % sudo jailify ./blueteam
+### `metadata.json` Format
+Here's example of that JSON file with all required fields
+
+```json
+{
+  "projectName": "Green Team",
+  "hostname": "greenteam",
+  "facultyContact": "***REMOVED***",
+  "client": "CS Support",
+  "teamMembers": [
+    {
+      "username": "***REMOVED***",
+      "name": "***REMOVED***",
+      "email": "***REMOVED***@students.wwu.edu"
+    },
+    {
+      "username": "***REMOVED***",
+      "name": "***REMOVED***",
+      "email": "***REMOVED***@students.wwu.edu"
+    },
+    {
+      "username": "***REMOVED***",
+      "name": "***REMOVED***",
+      "email": "***REMOVED***"
+    },
+    {
+      "username": "***REMOVED***",
+      "name": "***REMOVED***",
+      "email": "***REMOVED***@students.wwu.edu"
+    }
+  ]
+}
 ```
 
-### `dejailify`
+### Example Usage
+Example usage of `jailify` might look like
 ```
-myusername@hostname:~ % sudo dejailify
-The following jails are allocated for destruction:
-    - blueteam.sr***REMOVED***
-    - greenteam.sr***REMOVED***
-    - redteam.sr***REMOVED***
-Destroy all of them? [y/N] n
-Destroy them individually? [y/N] y
-Destroy blueteam.***REMOVED***? [y/N] y
-[WARNING]: This will destroy ALL jail data for blueteam.***REMOVED***. Are you sure? [y/N] y
-Destroying blueteam.***REMOVED***... done.
-Destroy greenteam.***REMOVED***? [y/N] n
-Destroy redteam.***REMOVED***? [y/N] n
-
-myusername@hostname:~ % sudo dejailify redteam
-Destroy redteam.***REMOVED***? [y/N] y
-[WARNING]: This will destroy ALL jail data for redteam.***REMOVED***. Are you sure? [y/N] y
-Destroying redteam.***REMOVED***... done.
+***REMOVED***@***REMOVED***:~ % sudo jailify ./greenteam.tgz
+```
+or
+```
+***REMOVED***@***REMOVED***:~ % sudo jailify ./blueteam
+```
+where the directory structure of `greenteam.tgz` or `blueteam` is
+something like
+```
+greenteam
+├── ***REMOVED***.pub
+├── ***REMOVED***.pub
+├── metadata.json
+├── ***REMOVED***.pub
+└── ***REMOVED***.pub
 ```
 
 
-
-
-
-
-
-
-
-extraction.py - The purpose of this program is to extract data from a given tarball or directory. It will
-                extract said data package, create a dictionary from the json file and add all of the public keys into the
-                corresponding team member's section of the dictionary. The final step is to validate the dictionary that 
-                contains all the extracted data.
