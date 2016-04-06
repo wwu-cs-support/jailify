@@ -1,5 +1,5 @@
 # Contributing to 'jailify'
-These are the guidelines for contributing to 'jailify'. Exceptions can always be
+These are the guidelines for contributing to `jailify`. Exceptions can always be
 made, but these guidelines exist for a reason and ought to keep workflow, code,
 and documentation in order. Please review them thoroughly before attempting to
 contribute. If it's obvious that you haven't read any of these guidelines it's
@@ -8,10 +8,7 @@ unlikely your contributions will be accepted.
 ## Repository Management
 Repository management is a tricky thing to get right. The preferred model for
 `jailify` is to have a [central repository][repo] that all contributors fork. No
-changes should reach the `master` branch except by way of a [merge request]. We
-suggest that contributors keep the master branch of their fork and local
-repositories up-to-date with the central repository. Ideally modifications
-should be made on branches and merge requests submitted from said branches.
+changes should reach the `master` branch except by way of a [merge request].
 
 ## Submitting Issues
 Issues can be for **anything**, not just bugs. Find some incorrect
