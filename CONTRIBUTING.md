@@ -1,5 +1,5 @@
 # Contributing to 'jailify'
- These are the guidelines for contributing to `jailify`. Exceptions can always be
+These are the guidelines for contributing to `jailify`. Exceptions can always be
 made, but these guidelines exist for a reason and ought to keep workflow, code,
 and documentation in order. Please review them thoroughly before attempting to
 contribute. If it's obvious that you haven't read any of these guidelines it's
