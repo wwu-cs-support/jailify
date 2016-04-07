@@ -35,7 +35,7 @@ def jailify_main(jail_directory):
 def dejailify_main(jail_name):
     if jail_name:
         confirmed_jail_name = find_jails(jail_name) 
-        destroy_jail_prompt(confirmed_jail_name)
+        destroy_jail_prompt(confirmed_jail_name, abort_output=False)
     else:
         jail_names = find_jails(jail_name=None, all_jails=True)
         destroy_all_jails_prompt(jail_names)
