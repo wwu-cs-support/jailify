@@ -5,18 +5,7 @@ import sys
 import fileinput
 import subprocess
 from jailify.util import do_command
-
-class InvalidJailName(Exception):
-    """An exception that is raised when the jail name is invalid.
-
-    Args:
-        message (str): an error message
-
-    Attributes:
-        message (str): an error message
-    """
-    def __init__(self, message):
-        self.message = message
+from jailify.util import InvalidJailName
 
 def destroy_jail(jail_name):
     """Destroys a jail.

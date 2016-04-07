@@ -32,7 +32,9 @@ def jailify_main(jail_directory):
 
     jailify.extract.validate(metadata)
 
+    jail_name = metadata["hostname"]
 
+    jailify.creation.create_jail(jail_name)
 
 
 

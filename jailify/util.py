@@ -1,6 +1,18 @@
 import sys
 import subprocess
 
+class InvalidJailName(Exception):
+    """An exception that is raised when the jail name is invalid.
+
+    Args:
+        message (str): an error message
+
+    Attributes:
+        message (str): an error message
+    """
+    def __init__(self, message):
+        self.message = message
+
 def do_command(command):
     """Executes command and error handles when applicable.
 
