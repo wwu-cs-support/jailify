@@ -4,8 +4,12 @@ Create or destroy jails for senior project teams on our senior project jail
 host.
 
 # Dependencies
-`jailify` depends on `python3` being installed.
-
+1. `jailify` must have `sendmail` enabled in the jail. This change can be made
+   in the base jail that all future jails will be cloned from.
+2. `jailify` must have `/usr/share/ske1` formatted with an added `.ssh/` and an
+   `authorized_keys` file for creation of user accounts to work. This change can
+  also be made in the base jail.
+3. `jailify` also is dependent on `python3` being installed.
 # Installation
 Run ..............
 
@@ -78,6 +82,9 @@ greenteam
 ## `dejailify`
 
 `dejailify` will be the command used to destroy old senior project jails.
+
+### Example Usage
+
 The basic usage is this:
 ```
 dejailify [team_name]
