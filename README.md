@@ -10,7 +10,7 @@ host.
 Run ..............
 
 
-### `jailify`
+## `jailify`
 `jailify` is the command used to create new jails for senior project teams. The
 basic usage is this:
 ```
@@ -75,7 +75,7 @@ greenteam
 └── ***REMOVED***.pub
 ```
 
-### `dejailify`
+## `dejailify`
 
 `dejailify` will be the command used to destroy old senior project jails.
 The basic usage is this:
