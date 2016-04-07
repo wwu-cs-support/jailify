@@ -28,6 +28,13 @@ def root_check(func):
 def jailify_main(jail_directory):
     print("Creating jail: {}.***REMOVED***".format(jail_directory.split(".")[0]))
 
+    metadata = jailify.extract.extract(jailify.extract.determine_file_type(jail_directory),jail_directory)
+
+    jailify.extract.validate(metadata)
+
+
+
+
 
 @root_check
 @click.command()
