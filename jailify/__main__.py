@@ -8,7 +8,7 @@ import jailify.util
 import jailify.users
 import jailify.delete
 import jailify.extract
-import jailify.creation_of_jails
+import jailify.creation
 
 PROG_NAME = os.path.basename(sys.argv and sys.argv[0] or __file__)
 
@@ -33,7 +33,6 @@ def jailify_main(jail_directory):
 @click.command()
 @click.argument('jail_name', required=False)
 def dejailify_main(jail_name):
-    print(jail_name)
     if jail_name:
         confirmed_jail_name = find_jails(jail_name) 
         destroy_jail_prompt(confirmed_jail_name)
@@ -100,15 +99,32 @@ def destroy_jail_prompt(jail_name, abort_output=True):
                 sys.exit("{}: info: Destruction of {} was aborted.".format(PROG_NAME, jail_name))
 
 
-def destroy_all_jails_prompt(jail_names):
-    """ handles confirmation for deletion of all jails
+def confirm_individual_destruction(jail_names):
+    """ checks if jails should be destroyed individually
 
     Args:
-        jail_name
+        jail_names (list): list of all jail names in jail.conf
+
     Returns:
         None
 
     """
+    single_destroy = click.confirm("Destroy them individually?", default=False)
+    if single_destroy:
+        for jail in jail_names:
+            destroy_jail_prompt(jail, abort_output=False)
+
+
+def destroy_all_jails_prompt(jail_names):
+    """ handles confirmation for deletion of all jails
+
+    Args:
+        jail_names (list): list of all jail names in jail.conf
+
+    Returns:
+        None
+
+    """    
     print("The following jails are allocated for destruction:") 
     for jail in jail_names:
         print("    - {:^10}".format(jail))
@@ -122,13 +138,6 @@ def destroy_all_jails_prompt(jail_names):
                 #progress bar for jail destruction
                 #destroy_jail(jail)
         else:
-            destroy = True
-    elif not destroy:
-        single_destroy = click.confirm("Destroy them individually?", default=False)
-        if single_destroy:
-            for jail in jail_names:
-                destroy_jail_prompt(jail, abort_output=False)
-        else:
-            sys.exit("{}: info: Program terminated, no jails to delete.".format(PROG_NAME))
-
-
+            confirm_individual_destruction(jail_names)
+    else:
+        confirm_individual_destruction(jail_names)
