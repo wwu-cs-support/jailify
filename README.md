@@ -4,12 +4,14 @@ Create or destroy jails for senior project teams on our senior project jail
 host.
 
 # Dependencies
-1. `jailify` must have `sendmail` enabled in the jail. This change can be made
+1. `jailify` is dependent on a ZFS dataset configured as a base jail that can
+    be cloned to create new jails. 
+2. `jailify` must have `sendmail` enabled in the jail. This change can be made
    in the base jail that all future jails will be cloned from.
-2. `jailify` must have `/usr/share/ske1` formatted with an added `.ssh/` and an
-   `authorized_keys` file for creation of user accounts to work. This change can
-  also be made in the base jail.
-3. `jailify` also is dependent on `python3` being installed.
+3. `jailify` must have `/usr/share/skel` formatted with an added `.ssh/` and an
+   `authorized_keys` file for creation of user accounts to work. This change 
+   can also be made in the base jail.
+4. `jailify` also is dependent on `python3` being installed.
 
 
 # Installation
@@ -98,7 +100,7 @@ With no arguments dejailify should query `/etc/jail.conf` for meta-data
 embedded in comments above the jail descriptions to present a list of jails
 allocated for destruction.
 
-With the `team_name` argument `dejailify` might look like
+For example, `jailify` with no argument should look like:
 ```
 ***REMOVED***@***REMOVED***:~ % sudo dejailify
 The following jails are allocated for destruction:
@@ -114,7 +116,7 @@ Destroy greenteam.***REMOVED***? [y/N] n
 Destroy redteam.***REMOVED***? [y/N] n
 ***REMOVED***@***REMOVED***:~ %
 ```
-or
+With the `team_name` argument `dejailify` might look like:
 ```
 ***REMOVED***@***REMOVED***:~ % sudo dejailify redteam
 Destroy redteam.***REMOVED***? [y/N] y
