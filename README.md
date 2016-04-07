@@ -10,9 +10,13 @@ host.
    `authorized_keys` file for creation of user accounts to work. This change can
   also be made in the base jail.
 3. `jailify` also is dependent on `python3` being installed.
-# Installation
-Run ..............
 
+
+# Installation
+To install `jailify` run the following command:
+```
+pip install git+ssh://git@gitlab.***REMOVED***/cs-support/jailify.git@master
+```
 
 ## `jailify`
 `jailify` is the command used to create new jails for senior project teams. The
