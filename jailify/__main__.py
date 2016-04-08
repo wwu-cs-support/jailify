@@ -4,11 +4,12 @@ import sys
 import click
 import functools
 
-import jailify.util
-import jailify.users
 import jailify.delete
-import jailify.extract
-import jailify.creation
+
+from jailify.users import create_users
+from jailify.creation import create_jail
+from jailify.extract import extract, determine_file_type, validate
+
 
 PROG_NAME = os.path.basename(sys.argv and sys.argv[0] or __file__)
 
@@ -28,14 +29,21 @@ def root_check(func):
 def jailify_main(jail_directory):
     print("Creating jail: {}.***REMOVED***".format(jail_directory.split(".")[0]))
 
-    metadata = jailify.extract.extract(jailify.extract.determine_file_type(jail_directory),jail_directory)
+    metadata = extract(determine_file_type(jail_directory),jail_directory)
+    validate(metadata)
 
-    jailify.extract.validate(metadata)
+    hostname = metadata["hostname"]
+    jail_name = hostname.replace('-', '_')
+   
+    usernames = user_gecos = user_keys = []
 
-    jail_name = metadata["hostname"]
+    for user in metadata['teamMembers']:
+        usernames.append(user['username'])
+        user_gecos.append(user['name'])
+        user_keys.append(user['publicKey'])
 
-    jailify.creation.create_jail(jail_name)
-
+    create_jail(hostname)
+    create_users(jail_name, usernames, usernames, user_gecos, user_keys)
 
 
 @root_check
