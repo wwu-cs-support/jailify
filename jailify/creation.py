@@ -73,9 +73,10 @@ def get_lowest_ip():
     """Finds the next available ip address.
 
     Finds the next available ip address by searching through the /etc/jail.conf file.
-    Then uses a regular expression find all ip addresses being used and stores the ip
-    addresses in a sorted list. If the current ip + 1 is not in the list, that is the
-    next lowest ip.
+    Then uses a regular expression to find all ip addresses in use and the range available.
+    The format of the range of ip addresses must be as follows: #ip-range = 127.0.0.0/24;
+    Starting with the lowest ip in the range available for jails, if that ip is not being
+    used, it is returned. An exception is raised if no ip addresses are available.
 
     Args:
         None
@@ -87,13 +88,14 @@ def get_lowest_ip():
         jail_config = jail_config.read()
 
     ip_addrs = re.findall("(?<=ip4.addr = )(.*);", jail_config)
+    ip_range = re.search("(?<=ip-range = )(.*);", jail_config)
 
-    ip_addrs.sort()
-    for ip in ip_addrs:
-        ip = ipaddress.IPv4Address(ip)
-        if not (str(ip + 1) in ip_addrs):
-            return str(ip + 1)
-    return str(ip + 1)
+    ip_network = list(ipaddress.IPv4Network(ip_range).hosts())[2:]
+
+    for ip in ip_network:
+        if not (str(ip) in ip_addrs):
+            return str(ip)
+    raise ValueError('No ip addresses available in range {}'.format(ip_range))
 
 def add_entry(ip_addr, jail_name, interface):
     """Opens /etc/jail.conf and appends the file to include an entry for the new jail.
