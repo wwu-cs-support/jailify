@@ -17,7 +17,7 @@ host.
    `/etc/jail.conf`. However, we suggest you place it after the `#DEFAULTS`
    section and before the jails. Use the following format:
    ```
-   #ip-range = <IP Range>;
+   #ip-range = <IP Range>
    ``` 
    `<IP Range>` should be the acceptable IP addresses expressed in CIDR notation,
     such as: `10.10.1.128/25`.
