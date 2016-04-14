@@ -19,7 +19,8 @@ host.
    ```
    #ip-range = <IP>;
    ``` 
-   `<IP>` should be the acceptable IP addresses expressed in CIDR notation.
+   `<IP>` should be the acceptable IP addresses expressed in CIDR notation,
+   such as: `10.10.1.128/25`.
 
 # Installation
 To install `jailify` run the following command:
