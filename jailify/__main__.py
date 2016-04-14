@@ -34,7 +34,9 @@ def jailify_main(jail_directory):
     hostname = metadata["hostname"]
     jail_name = hostname.replace('-', '_')
    
-    usernames = user_gecos = user_keys = []
+    usernames = []
+    user_gecos = []
+    user_keys = []
 
     for user in metadata['teamMembers']:
         usernames.append(user['username'])
