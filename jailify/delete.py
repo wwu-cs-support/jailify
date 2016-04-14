@@ -88,28 +88,15 @@ def edit_jailconf_file(jail_name):
         None
     """
     print("editing jail.conf file")
-    found_jail = False
-    with fileinput.input(files=("/etc/jail.conf"), inplace=True) as jail_conf:
-        for line in jail_conf:
-            if line.split(' ', 1)[0] == jail_name:
-                found_jail = True
-                continue
-            elif found_jail:
-                if line.startswith("}"):
-                    found_jail = False
-                continue
-            else:
-                print(line.rstrip('\n'))
 
-    with fileinput.input(files=("/etc/jail.conf"), inplace=True) as jail_conf:
-        previous_line = ''
-        for line in jail_conf:
-            if line == '\n' and previous_line == '\n':
-                previous_line = line
-                continue
-            else:
-                previous_line = line
-                print(line.rstrip('\n'))
+    with open("/etc/jail.conf", "r") as jail_conf_file:
+        jail_conf = jail_conf_file.read()
+
+    pattern = '\s*{}+\s*\{{.*?\}}'.format(jail_name)
+    jail_conf = re.sub(pattern, '', jail_conf, flags=re.S)
+
+    with open("/etc/jail.conf", "w") as jail_conf_file:
+        jail_conf_file.write(jail_conf)
 
 if __name__ == '__main__':
     if(len(sys.argv) == 1):
