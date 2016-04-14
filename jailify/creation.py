@@ -88,7 +88,8 @@ def get_lowest_ip():
         jail_config = jail_config.read()
 
     ip_addrs = re.findall("(?<=ip4.addr = )(.*);", jail_config)
-    ip_range = re.search("(?<=ip-range = )(.*);", jail_config)
+    ip_range = re.search("(?<=ip-range = )(.*)", jail_config)
+    ip_range = ip_range.group(0)
 
     ip_network = list(ipaddress.IPv4Network(ip_range).hosts())[2:]
 

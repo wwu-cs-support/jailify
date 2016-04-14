@@ -18,7 +18,6 @@ def destroy_jail(jail_name):
     Returns:
         None
     """
-    print("Destroying " + jail_name)
     stop_jail(jail_name)
     zfs_destroy(jail_name)
     remove_fstab(jail_name)
