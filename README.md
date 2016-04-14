@@ -12,7 +12,15 @@ host.
    `authorized_keys` file for creation of user accounts to work. This change 
    can also be made in the base jail.
 4. `jailify` also is dependent on `python3` being installed.
-
+5. The host must specify an acceptable range of IP addresses for the jails to
+   use in `/etc/jail.conf`. You may put this comment anywhere in
+   `/etc/jail.conf`. However, we suggest you place it after the `#DEFAULTS`
+   section and before the jails. Use the following format:
+   ```
+   #ip-range = <IP Range>
+   ``` 
+   `<IP Range>` should be the acceptable IP addresses expressed in CIDR notation,
+    such as: `10.10.1.128/25`.
 
 # Installation
 To install `jailify` run the following command:
