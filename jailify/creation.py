@@ -115,7 +115,7 @@ def add_entry(ip_addr, jail_name, interface):
                      '  interface = {};\n'
                      '  ip4.addr = {};\n'
                      '  host.hostname = {}.sr***REMOVED***;\n'
-                     '}}').format(jail_name, interface, ip_addr,jail_name.replace('_','-')))
+                     '}}').format(jail_name, interface, ip_addr,jail_name.replace('_','-'))
         jail_file.write(jail_desc)
 
 def create_fstab_file(jail_name):
