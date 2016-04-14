@@ -121,6 +121,18 @@ def add_key(jail, user, key, jail_root="/usr/jail/", home_dir="usr/home/",
 
 
 def create_users(jail, user_groups, user_names, user_gecos, user_keys):
+    """Creates user accounts and places a users ssh key into their authorized_keys file
+
+    Args:
+        jail (str): Current jail name we are working with.
+        user_groups (list): Each entry corresponds to a goup a user will be added to.
+        user_names (list): List of user names of accounts to be created.
+        user_gecos (list): Each entry corresponds to a users gecos information.
+        user_keys (list): Each entry corresponds to a users public ssh key.
+
+    Returns:
+        None
+    """
     for user, group, gecos, key  in zip(user_names, user_groups, user_gecos, user_keys):
         print("Adding {} as a group.".format(group))
         add_group(jail, group)
