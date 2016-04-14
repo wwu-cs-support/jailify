@@ -4,9 +4,8 @@ import sys
 import click
 import functools
 
-import jailify.delete
-
 from jailify.users import create_users
+from jailify.delete import destroy_jail
 from jailify.creation import create_jail
 from jailify.extract import extract, determine_file_type, validate
 
@@ -108,7 +107,7 @@ def destroy_jail_prompt(jail_name, abort_output=True):
             if confirm_destroy:
                 print("destroying {} ...........".format(jail_name))
                 #Progress bar for destruction.
-                #destroy_jail(jail_name)
+                destroy_jail(jail_name)
             if abort_output:
                 sys.exit("{}: info: Destruction of {} was aborted.".format(PROG_NAME, jail_name))
         else:
