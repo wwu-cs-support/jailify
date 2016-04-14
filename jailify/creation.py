@@ -111,8 +111,12 @@ def add_entry(ip_addr, jail_name, interface):
     """
     print("Adding entry to /etc/jail.conf")
     with open('/etc/jail.conf', 'a') as jail_file:
-        jail_description = "\n{} {{\n    interface = \"{}\";\n    ip4.addr = {};\n    host.hostname = {};\n}}\n".format(jail_name.replace('-','_'), interface, ip_addr, "{}.sr***REMOVED***".format(jail_name))
-        jail_file.write(jail_description)
+        jail_desc = ('{} {{'
+                     '  interface = {};\n'
+                     '  ip4.addr = {};\n'
+                     '  host.hostname = {}.sr***REMOVED***;\n'
+                     '}}').format(jail_name, interface, ip_addr,jail_name.replace('_','-'))
+        jail_file.write(jail_desc)
 
 def create_fstab_file(jail_name):
     """Creates an empty file in the /etc/ directory called fstab.jail_name where jail_name is an argument
@@ -124,7 +128,7 @@ def create_fstab_file(jail_name):
     """
     print("Creating fstab file")
     path = "/etc/fstab."
-    fstab_path = path + jail_name.replace('-','_')
+    fstab_path = path + jail_name
     fstab_file = open(fstab_path, 'w')
     fstab_file.close()
 
@@ -141,7 +145,7 @@ def clone_base_jail(snapshot, jail_name):
     path = "zroot/jail/"
     jail_version = ".base10.2x64"
     snapshot_path = "{}{}@{}".format(path, jail_version, snapshot)
-    jail_path = os.path.join(path, jail_name.replace('-','_'))
+    jail_path = os.path.join(path, jail_name)
 
     cmd = ["zfs", "clone", snapshot_path, jail_path]
     do_command(cmd)
@@ -156,7 +160,7 @@ def start_jail(jail_name):
     Returns:
         None
     """
-    cmd = ["service", "jail", "start", jail_name.replace('-','_')]
+    cmd = ["service", "jail", "start", jail_name]
     do_command(cmd)
 
 def create_jail(jail_name):

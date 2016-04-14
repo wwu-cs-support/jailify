@@ -31,8 +31,7 @@ def jailify_main(jail_directory):
     metadata = extract(determine_file_type(jail_directory),jail_directory)
     validate(metadata)
 
-    hostname = metadata["hostname"]
-    jail_name = hostname.replace('-', '_')
+    jail_name = metadata["hostname"].replace('-', '_')
    
     usernames = []
     user_gecos = []
@@ -43,7 +42,7 @@ def jailify_main(jail_directory):
         user_gecos.append(user['name'])
         user_keys.append(user['publicKey'])
 
-    create_jail(hostname)
+    create_jail(jail_name)
     create_users(jail_name, usernames, usernames, user_gecos, user_keys)
 
 
