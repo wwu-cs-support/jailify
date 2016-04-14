@@ -1,5 +1,7 @@
 from setuptools import setup, find_packages
 
+requires = ["click"]
+
 setup(
     name='jailify',
     version='0.1.0',
@@ -9,7 +11,7 @@ setup(
     packages=find_packages(),
     package_data={},
     py_modules=['jailify'],
-    install_requires=[],
+    install_requires=requires,
     entry_points={
         'console_scripts': [
             'jailify=jailify.__main__:jailify_main',

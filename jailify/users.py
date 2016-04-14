@@ -120,15 +120,7 @@ def add_key(jail, user, key, jail_root="/usr/jail/", home_dir="usr/home/",
         sys.exit("jailify: error: The file {} does not exist.".format(path_to_file))
 
 
-if __name__ == '__main__':
-    #for testing....
-
-    jail = "example"
-    user_groups = ["test01", "test02", "test03", "test04"]
-    user_names = ["test01", "test02", "test03", "test04"]
-    user_gecos = ["test 01", "test 02", "test 03", "test 04"]
-    user_keys = ["djkaafd01", "jksda02", "jasdjk03", "jkdakh04"]
-
+def create_users(jail, user_groups, user_names, user_gecos, user_keys):
     for user, group, gecos, key  in zip(user_names, user_groups, user_gecos, user_keys):
         print("Adding {} as a group.".format(group))
         add_group(jail, group)

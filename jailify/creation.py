@@ -5,6 +5,7 @@ import os.path
 import ipaddress
 import subprocess
 from jailify.util import do_command
+from jailify.util import InvalidJailName
 from jailify.util import do_command_with_return
 
 def get_interface():
@@ -72,9 +73,10 @@ def get_lowest_ip():
     """Finds the next available ip address.
 
     Finds the next available ip address by searching through the /etc/jail.conf file.
-    Then uses a regular expression find all ip addresses being used and stores the ip
-    addresses in a sorted list. If the current ip + 1 is not in the list, that is the
-    next lowest ip.
+    Then uses a regular expression to find all ip addresses in use and the range available.
+    The format of the range of ip addresses must be as follows: #ip-range = 127.0.0.0/24;
+    Starting with the lowest ip in the range available for jails, if that ip is not being
+    used, it is returned. An exception is raised if no ip addresses are available.
 
     Args:
         None
@@ -86,13 +88,15 @@ def get_lowest_ip():
         jail_config = jail_config.read()
 
     ip_addrs = re.findall("(?<=ip4.addr = )(.*);", jail_config)
+    ip_range = re.search("(?<=ip-range = )(.*)", jail_config)
+    ip_range = ip_range.group(0)
 
-    ip_addrs.sort()
-    for ip in ip_addrs:
-        ip = ipaddress.IPv4Address(ip)
-        if not (str(ip + 1) in ip_addrs):
-            return str(ip + 1)
-    return str(ip + 1)
+    ip_network = list(ipaddress.IPv4Network(ip_range).hosts())[2:]
+
+    for ip in ip_network:
+        if not (str(ip) in ip_addrs):
+            return str(ip)
+    raise ValueError('No ip addresses available in range {}'.format(ip_range))
 
 def add_entry(ip_addr, jail_name, interface):
     """Opens /etc/jail.conf and appends the file to include an entry for the new jail.
@@ -107,7 +111,7 @@ def add_entry(ip_addr, jail_name, interface):
     """
     print("Adding entry to /etc/jail.conf")
     with open('/etc/jail.conf', 'a') as jail_file:
-        jail_description = "\n{} {{\n    interface = \"{}\";\n    ip4.addr = {};\n}}\n".format(jail_name, interface, ip_addr)
+        jail_description = "\n{} {{\n    interface = \"{}\";\n    ip4.addr = {};\nhost.hostname = {};\n}}\n".format(jail_name.replace('-','_'), interface, ip_addr, "{}.sr***REMOVED***".format(jail_name))
         jail_file.write(jail_description)
 
 def create_fstab_file(jail_name):
@@ -120,7 +124,7 @@ def create_fstab_file(jail_name):
     """
     print("Creating fstab file")
     path = "/etc/fstab."
-    fstab_path = path + jail_name
+    fstab_path = path + jail_name.replace('-','_')
     fstab_file = open(fstab_path, 'w')
     fstab_file.close()
 
@@ -137,7 +141,7 @@ def clone_base_jail(snapshot, jail_name):
     path = "zroot/jail/"
     jail_version = ".base10.2x64"
     snapshot_path = "{}{}@{}".format(path, jail_version, snapshot)
-    jail_path = os.path.join(path, jail_name)
+    jail_path = os.path.join(path, jail_name.replace('-','_'))
 
     cmd = ["zfs", "clone", snapshot_path, jail_path]
     do_command(cmd)
@@ -152,12 +156,11 @@ def start_jail(jail_name):
     Returns:
         None
     """
-    cmd = ["service", "jail", "start", jail_name]
+    cmd = ["service", "jail", "start", jail_name.replace('-','_')]
     do_command(cmd)
 
-if __name__ == '__main__':
+def create_jail(jail_name):
     lowest_ip = get_lowest_ip()
-    jail_name = str(sys.argv[1]) #extract.py - teamname
     interface = get_interface()
     snapshot = get_latest_snapshot()
     if check_name(jail_name):
@@ -166,4 +169,4 @@ if __name__ == '__main__':
         clone_base_jail(snapshot, jail_name)
         start_jail(jail_name)
     else:
-        sys.exit(1)
+        raise InvalidJailName("Jail name already exists")
