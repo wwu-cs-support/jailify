@@ -111,7 +111,7 @@ def add_entry(ip_addr, jail_name, interface):
     """
     print("Adding entry to /etc/jail.conf")
     with open('/etc/jail.conf', 'a') as jail_file:
-        jail_description = "\n{} {{\n    interface = \"{}\";\n    ip4.addr = {};\nhost.hostname = {};\n}}\n".format(jail_name.replace('-','_'), interface, ip_addr, "{}.sr***REMOVED***".format(jail_name))
+        jail_description = "\n{} {{\n    interface = \"{}\";\n    ip4.addr = {};\n    host.hostname = {};\n}}\n".format(jail_name.replace('-','_'), interface, ip_addr, "{}.sr***REMOVED***".format(jail_name))
         jail_file.write(jail_description)
 
 def create_fstab_file(jail_name):
