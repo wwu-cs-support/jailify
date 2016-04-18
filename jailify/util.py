@@ -43,3 +43,18 @@ def do_command_with_return(command):
     except subprocess.CalledProcessError as e:
         sys.exit(e.output)
     return result
+
+def create_snapshot(jail_name):
+    """Creates a snapshot.
+
+    Calls do_command to create a clean snapshot of the newly created jail.
+
+    Args:
+        jail_name (str): desired jail_name
+
+    Returns:
+        None
+    """
+    path = 'zroot/jail/{}@clean'.format(jail_name)
+    cmd = ('zfs', 'snapshot', path)
+    do_command(cmd)

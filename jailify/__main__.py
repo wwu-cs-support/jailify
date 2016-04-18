@@ -7,6 +7,7 @@ import functools
 from jailify.users import create_users
 from jailify.delete import destroy_jail
 from jailify.creation import create_jail
+from jailify.util import create_snapshot 
 from jailify.extract import extract, determine_file_type, validate
 
 
@@ -44,7 +45,7 @@ def jailify_main(jail_directory):
 
     create_jail(jail_name)
     create_users(jail_name, usernames, usernames, user_gecos, user_keys)
-
+    create_snapshot(jail_name)
 
 @root_check
 @click.command()

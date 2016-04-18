@@ -111,7 +111,7 @@ def add_entry(ip_addr, jail_name, interface):
     """
     print("Adding entry to /etc/jail.conf")
     with open('/etc/jail.conf', 'a') as jail_file:
-        jail_desc = ('{} {{'
+        jail_desc = ('\n{} {{'
                      '  interface = {};\n'
                      '  ip4.addr = {};\n'
                      '  host.hostname = {}.sr***REMOVED***;\n'
