@@ -35,32 +35,6 @@ class InvalidFileType(InvalidException):
     pass
 
 
-def main(argv):
-    """Check for correct number args, determine file type, extract
-       file, extract data from file.
-
-    Args:
-        argv (list): first arg should be the file name.
-    Returns:
-        None
-    """
-
-    # Check for correct number of args and get the file name/path.
-    if (len(argv) == 2):
-        try:
-            if os.path.isfile(argv[1]) or os.path.isdir(argv[1]):
-                file_name = argv[1]
-        except ValueError:
-            print("Error with file.")
-    else:
-        sys.exit("Incorrect number of arguments")
-
-    #Extract based on the file type returned from determine_file_type
-    metadata = extract(determine_file_type(file_name),file_name)
-
-    validate(metadata)
-
-
 ## DETERMINE_FILE_TYPE ##
 def determine_file_type(file_name):
     """Determines which type of file is given.
