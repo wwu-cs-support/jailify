@@ -18,6 +18,23 @@ import mimetypes
 REQUIRED_KEYS = ("projectName","client","hostname","facultyContact","client","teamMembers")
 REQUIRED_USER_KEYS = ("username","publicKey","email","name")
 
+class InvalidException(Exception):
+    """An exception that is raised when the file type is invalid.
+
+    Args:
+        message (str): an error message
+
+    Attributes:
+        message (str): an error message
+    """
+    def __init__(self, message):
+        self.message = message
+
+
+class InvalidFileType(InvalidException):
+    pass
+
+
 def main(argv):
     """Check for correct number args, determine file type, extract
        file, extract data from file.
@@ -68,7 +85,7 @@ def determine_file_type(file_name):
     elif mime_type == "xz":
         file_type = "xz"
     else:
-        sys.exit("Type is unacceptable")
+       raise InvalidFileType("{} is an invalid file type.".format(mime_type)) 
 
     return file_type
 
