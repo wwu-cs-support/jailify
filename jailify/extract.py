@@ -32,18 +32,32 @@ class ExtractionError(Exception):
 
 
 class InvalidFileType(ExtractionError):
+    """An exception that is raised when an invalid file type is given."""
     pass
 
 
 class FailedToExtractFile(ExtractionError):
-    pass
-
-
-class FailedTarExtraction(ExtractionError):
+    """An exception that is raised when jailify fails to extract the given file."""
     pass
 
 
 class InvalidJsonError(ExtractionError):
+    """An exception that is raised when there is invalid JSON present."""
+    pass
+
+
+class ValidationError(ExtractionError):
+    """An exception that is raised when there is an error with SSH key validation."""
+    pass
+
+
+class InvalidHostname(ExtractionError):
+    """An exception that is raised when there is an error with the given hostname."""
+    pass
+
+
+class InvalidMetadata(ExtractionError):
+    """An exception that is raised when there is an error with the given metadata."""
     pass
 
 
@@ -71,9 +85,9 @@ def determine_file_type(file_name):
     elif mime_type == "xz":
         file_type = "xz"
     else:
-        raise Invhttps://gitlab.***REMOVED***/cs-support/jailify/issues/15alidFileType("Error: {} is an invalid file type.".format(mime_type)) 
-
+        raise InvalidFileType("Error: {} is an invalid file type.".format(mime_type)) 
     return file_type
+
 
 ## EXTRACT ##
 def extract(filetype, filename):
@@ -95,9 +109,9 @@ def extract(filetype, filename):
     elif filetype == "dir":
         mdata = extract_dir(filename)
     else:
-        raise FailedToExtractFile("Error: Could not extract data from {}.".format(filename))
-    
+        raise FailedToExtractFile("Error: Could not extract data from {}.".format(filename))    
     return mdata
+
 
 ## EXTRACT_TAR ##
 def extract_tar(filenametar, comptype):
@@ -121,7 +135,7 @@ def extract_tar(filenametar, comptype):
                     try:
                         metadata = json.loads(bytes.decode(tar.extractfile(f).read()))
                     except ValueError:
-                        sys.exit("Decoding JSON has failed")
+                        raise InvalidJsonException("Error: Decoding JSON has failed")
                 elif os.path.basename(f.name).endswith('.pub'):
                     username = os.path.splitext(os.path.basename(f.name))[0]
                     key = bytes.decode(tar.extractfile(f).read())
@@ -130,7 +144,7 @@ def extract_tar(filenametar, comptype):
         metadata = distribute(pub_keys,metadata)
         return metadata
     except tarfile.TarError:
-        raise FailedTarExtraction("Error: Failed to extract the tar file")
+        raise FailedToExtractFile("Error: Failed to extract the tar file")
 
 
 ## EXTRACT_ZIP ##
@@ -158,7 +172,7 @@ def extract_zip(zipfilename):
         metadata = distribute(pub_keys, metadata)
         return metadata
     except zipfile.BadZipFile:
-        raise FailedZipExtraction("Error: Failed to extract the zip file")
+        raise FailedToExtractFile("Error: Failed to extract the zip file")
 
 
 ## EXTRACT_DIR ##
@@ -227,18 +241,18 @@ def validate(metadata):
         regex = re.compile('^(?![0-9]+$)(?!-)[a-zA-Z0-9-]{,63}(?<!-)$')
         match = regex.match(metadata["hostname"])
         if not match:
-            sys.exit("hostname invalid")
+            raise InvalidHostname("Error: Hostname Invalid");
     else:
-        sys.exit("incorrect metadata parameters")
+        raise InvalidMetadata("Error: Metadata parameters are invalid");
     ## validate team members##
     teamMembers = metadata["teamMembers"]
     for member in teamMembers:
         try:
             if not (all(k in member for k in REQUIRED_USER_KEYS) and
                 member["username"] == member["publicKey"].split()[-1]):
-                sys.exit("validation failed")
+                raise ValidationError("Error: Validation Failed")
         except KeyError:
-            sys.exit("validatios failed - key error")
+            raise ValidationError("Error: Validation Error - Key Error")
 
 if __name__ == '__main__':
     main(sys.argv)
