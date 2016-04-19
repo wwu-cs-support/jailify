@@ -126,8 +126,8 @@ def extract_tar(filenametar, comptype):
         metadata = distribute(pub_keys,metadata)
         return metadata
     except tarfile.TarError:
-        raise FailedTarExtraction("Error: Failed to open the tar file")
-        sys.exit("Couldn't open tarfile")
+        raise FailedTarExtraction("Error: Failed to extract the tar file")
+
 
 ## EXTRACT_ZIP ##
 def extract_zip(zipfilename):
@@ -154,7 +154,7 @@ def extract_zip(zipfilename):
         metadata = distribute(pub_keys, metadata)
         return metadata
     except zipfile.BadZipFile:
-       sys.exit("Couldn't extract zip file")
+        raise FailedZipExtraction("Error: Failed to extract the zip file")
 
 
 ## EXTRACT_DIR ##
