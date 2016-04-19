@@ -54,7 +54,7 @@ def get_latest_snapshot():
     """Finds the latest snapshot.
 
     Finds the latest snapshot by using a regular expression on the output of calling
-    'zfs list -t snapshot'.
+    'zfs list -t snapshot'. Assumes base jail name is .base10.2x64.
 
     Args:
         None
@@ -65,7 +65,7 @@ def get_latest_snapshot():
     cmd = ["zfs", "list", "-t", "snapshot"]
     zfs_output = do_command_with_return(cmd)
 
-    snapshot_list = re.findall('(?<=@)\S*', str(zfs_output))
+    snapshot_list = re.findall('(?<=.base10.2x64@)\S*', str(zfs_output))
     latest_snapshot = snapshot_list[-1]
     return latest_snapshot
 
@@ -111,7 +111,7 @@ def add_entry(ip_addr, jail_name, interface):
     """
     print("Adding entry to /etc/jail.conf")
     with open('/etc/jail.conf', 'a') as jail_file:
-        jail_desc = ('{} {{'
+        jail_desc = ('\n{} {{\n'
                      '  interface = {};\n'
                      '  ip4.addr = {};\n'
                      '  host.hostname = {}.sr***REMOVED***;\n'

@@ -56,7 +56,7 @@ def zfs_destroy(jail_name):
         raise InvalidJailName("Jail name cannot be empty")
 
     zfs_path = "zroot/jail/" + jail_name
-    zfs_destroy_cmd = ("zfs", "destroy", "zroot/jail/" + jail_name)
+    zfs_destroy_cmd = ("zfs", "destroy", "-r", "zroot/jail/" + jail_name)
     do_command(zfs_destroy_cmd)
 
 def remove_fstab(jail_name):
