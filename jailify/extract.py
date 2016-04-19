@@ -18,7 +18,7 @@ import mimetypes
 REQUIRED_KEYS = ("projectName","client","hostname","facultyContact","client","teamMembers")
 REQUIRED_USER_KEYS = ("username","publicKey","email","name")
 
-class InvalidException(Exception):
+class ExtractionError(Exception):
     """An exception that is raised when the file type is invalid.
 
     Args:
@@ -31,7 +31,15 @@ class InvalidException(Exception):
         self.message = message
 
 
-class InvalidFileType(InvalidException):
+class InvalidFileType(ExtractionError):
+    pass
+
+
+class FailedToExtractFile(ExtractionError):
+    pass
+
+
+class FailedTarExtraction(ExtractionError):
     pass
 
 
@@ -59,7 +67,7 @@ def determine_file_type(file_name):
     elif mime_type == "xz":
         file_type = "xz"
     else:
-       raise InvalidFileType("{} is an invalid file type.".format(mime_type)) 
+        raise InvalidFileType("Error: {} is an invalid file type.".format(mime_type)) 
 
     return file_type
 
@@ -83,7 +91,8 @@ def extract(filetype, filename):
     elif filetype == "dir":
         mdata = extract_dir(filename)
     else:
-        sys.exit("error with file type in extract()")
+        raise FailedToExtractFile("Error: Could not extract data from {}.".format(filename))
+    
     return mdata
 
 ## EXTRACT_TAR ##
@@ -117,6 +126,7 @@ def extract_tar(filenametar, comptype):
         metadata = distribute(pub_keys,metadata)
         return metadata
     except tarfile.TarError:
+        raise FailedTarExtraction("Error: Failed to open the tar file")
         sys.exit("Couldn't open tarfile")
 
 ## EXTRACT_ZIP ##
