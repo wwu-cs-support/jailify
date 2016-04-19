@@ -43,6 +43,10 @@ class FailedTarExtraction(ExtractionError):
     pass
 
 
+class InvalidJsonError(ExtractionError):
+    pass
+
+
 ## DETERMINE_FILE_TYPE ##
 def determine_file_type(file_name):
     """Determines which type of file is given.
@@ -67,7 +71,7 @@ def determine_file_type(file_name):
     elif mime_type == "xz":
         file_type = "xz"
     else:
-        raise InvalidFileType("Error: {} is an invalid file type.".format(mime_type)) 
+        raise Invhttps://gitlab.***REMOVED***/cs-support/jailify/issues/15alidFileType("Error: {} is an invalid file type.".format(mime_type)) 
 
     return file_type
 
@@ -146,7 +150,7 @@ def extract_zip(zipfilename):
                     try:
                         metadata = json.loads(bytes.decode(myzip.open(n).read()))
                     except ValueError:
-                        sys.exit("Decoding JSON has failed")
+                        raise InvalidJsonError("Error decoding json failed")
                 elif os.path.basename(n).endswith('.pub'):
                     username = os.path.splitext(os.path.basename(n))[0]
                     key = bytes.decode(myzip.open(n).read())
@@ -174,7 +178,7 @@ def extract_dir(directory):
                     try:
                         metadata = json.loads(meta.read())
                     except ValueError:
-                        sys.exit("Decoding JSON has failed")
+                        raise InvalidJsonError("Error: Could no decode JSON")
             elif os.path.basename(file).endswith(".pub"):
                 username = os.path.splitext(file)[0]
                 with open(os.path.join(subdir, file), 'r') as key:
@@ -204,7 +208,8 @@ def distribute(pub_keys, metadata):
                     m["publicKey"] = pub_keys[k]
         return metadata
     except KeyError:
-        sys.exit("malformed JSON. Better check that out.")
+        raise InvalidJsonError("Malformed JSON. Better check that out.")
+
 
 ## VALIDATE ##
 def validate(metadata):
