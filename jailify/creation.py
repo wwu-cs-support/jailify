@@ -20,10 +20,10 @@ class CreationError(Exception):
     def __init__(self, message):
         self.message = message
 
-class RegularExpressionError(CreationError)
+class RegularExpressionError(CreationError):
     pass
 
-class InvalidJailNameError(CreationError)
+class InvalidJailNameError(CreationError):
     pass
 
 def get_interface():
