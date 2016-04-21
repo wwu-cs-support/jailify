@@ -1,8 +1,8 @@
 import sys
 import subprocess
 
-class InvalidJailName(Exception):
-    """An exception that is raised when the jail name is invalid.
+class CommandError(Exception):
+    """An exception that is raised when subprocess fails.
 
     Args:
         message (str): an error message
@@ -25,8 +25,7 @@ def do_command(command):
     try:
         subprocess.check_call(command)
     except subprocess.CalledProcessError as e:
-        sys.exit(e.output)
-
+        raise CommandError(e.output)
 
 def do_command_with_return(command):
     """Executes command and error handles when applicable.
@@ -41,7 +40,7 @@ def do_command_with_return(command):
     try:
         result = bytes.decode(subprocess.check_output(command))
     except subprocess.CalledProcessError as e:
-        sys.exit(e.output)
+        raise CommandError(e.output)
     return result
 
 def create_snapshot(jail_name):

@@ -8,6 +8,24 @@ from jailify.util import do_command
 from jailify.util import InvalidJailName
 from jailify.util import do_command_with_return
 
+class CreationError(Exception):
+    """An exception that is raised when creating a jail fails.
+
+    Args:
+        message (str): an error message
+
+    Attributes:
+        message (str): an error message
+    """
+    def __init__(self, message):
+        self.message = message
+
+class RegularExpressionError(CreationError)
+    pass
+
+class InvalidJailNameError(CreationError)
+    pass
+
 def get_interface():
     """Finds the correct interface.
 
@@ -27,8 +45,7 @@ def get_interface():
     if(len(interfaces) == 1):
         return interfaces[0]
     else:
-        print("Multiple interfaces detected. Aborting due to ambiguity.")
-        sys.exit(1)
+        raise RegularExpressionError("Error: Multiple interfaces detected. Aborting due to ambiguity.")
 
 def check_name(jail_name):
     """Checks the desired jail name for availability.
@@ -46,7 +63,6 @@ def check_name(jail_name):
     with open('/etc/jail.conf', 'r') as jail_config:
         for line in jail_config:
             if line.startswith(jail_name):
-                print("Error: {} already exists as a jail name".format(jail_name))
                 return False
     return True
 
@@ -66,8 +82,10 @@ def get_latest_snapshot():
     zfs_output = do_command_with_return(cmd)
 
     snapshot_list = re.findall('(?<=.base10.2x64@)\S*', str(zfs_output))
-    latest_snapshot = snapshot_list[-1]
-    return latest_snapshot
+    if not snapshot_list:
+        raise RegularExpressionError("Error: No snapshots have been found.")
+    else:
+        return snapshot_list[-1]
 
 def get_lowest_ip():
     """Finds the next available ip address.
@@ -173,4 +191,4 @@ def create_jail(jail_name):
         clone_base_jail(snapshot, jail_name)
         start_jail(jail_name)
     else:
-        raise InvalidJailName("Jail name already exists")
+        raise InvalidJailName("Error: {} Jail name already exists".format(jail_name))
