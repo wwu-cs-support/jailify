@@ -5,7 +5,6 @@ import os.path
 import ipaddress
 import subprocess
 from jailify.util import do_command
-from jailify.util import InvalidJailName
 from jailify.util import do_command_with_return
 
 class CreationError(Exception):
