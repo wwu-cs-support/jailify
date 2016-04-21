@@ -190,4 +190,4 @@ def create_jail(jail_name):
         clone_base_jail(snapshot, jail_name)
         start_jail(jail_name)
     else:
-        raise InvalidJailName("Error: {} Jail name already exists".format(jail_name))
+        raise InvalidJailNameError("Error: {} Jail name already exists".format(jail_name))
