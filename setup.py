@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-requires = ["click"]
+requires = ["click", "python-magic"]
 
 setup(
     name='jailify',
