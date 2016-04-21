@@ -7,7 +7,7 @@ from jailify.util import do_command
 from jailify.util import do_command_with_return
 
 class UserError(Exception):
-    """An exception that is raised when the file type is invalid.
+    """An exception that is raised when there is a problem with user creation.
 
     Args:
         message (str): an error message
