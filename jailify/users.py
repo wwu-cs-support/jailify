@@ -6,6 +6,27 @@ import subprocess
 from jailify.util import do_command
 from jailify.util import do_command_with_return
 
+class UserError(Exception):
+    """An exception that is raised when the file type is invalid.
+
+    Args:
+        message (str): an error message
+
+    Attributes:
+        message (str): an error message
+    """
+    def __init__(self, message):
+        self.message = message
+
+
+class SSHKeyError(UserError):
+    pass
+
+
+class SendMailError(UserError):
+    pass
+
+
 def add_group(jail, group):
     """Creates a group within the given jail.
 
@@ -93,7 +114,7 @@ def send_msg(jail, user, body, subject="Welcome"):
     try:
         process = subprocess.Popen(command, stdin=subprocess.PIPE)
     except Exception as e:
-        sys.exit(e.output)
+        raise SendMailError(e.output)
     process.communicate(bytes(body, 'UTF-8'))
     print("Sent mail to {}.".format(user))
 
@@ -115,9 +136,9 @@ def add_key(jail, user, key, jail_root="/usr/jail/", home_dir="usr/home/",
     if os.path.isfile(path_to_file):
         with open(path_to_file, "a") as f:
             if f.write(key) <= 0:
-                sys.exit("jailify: error: Could not write to authorized_keys file.")
+                raise SSHKeyError("jailify: error: Could not write to authorized_keys file.")
     else:
-        sys.exit("jailify: error: The file {} does not exist.".format(path_to_file))
+        raise SSHKeyError("jailify: error: The file {} does not exist.".format(path_to_file))
 
 
 def create_users(jail, user_groups, user_names, user_gecos, user_keys):

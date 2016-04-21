@@ -57,10 +57,14 @@ def jailify_main(jail_directory):
 
     try:
         jc.create_jail(jail_name)
-    except (jc.InvalidJailName, jc.RegularExpressionError, CommandError) as e:
-        sys.exit(e.message)
+    except (jc.InvalidJailName, jc.RegularExpressionError, CommandError) as err:
+        sys.exit(err.message)
 
-    create_users(jail_name, usernames, usernames, user_gecos, user_keys)
+    try:
+        create_users(jail_name, usernames, usernames, user_gecos, user_keys)
+    except (SSHKeyError, SendMailError, CommandError) as err:
+        sys.exit(err.message)
+
     create_snapshot(jail_name)
 
 @root_check
