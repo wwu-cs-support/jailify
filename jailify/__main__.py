@@ -3,12 +3,12 @@ import re
 import sys
 import click
 import functools
+import jailify.extract as je
 
 from jailify.users import create_users
 from jailify.delete import destroy_jail
 from jailify.creation import create_jail
 from jailify.util import create_snapshot 
-from jailify.extract import extract, determine_file_type, validate
 
 
 PROG_NAME = os.path.basename(sys.argv and sys.argv[0] or __file__)
@@ -29,8 +29,20 @@ def root_check(func):
 def jailify_main(jail_directory):
     print("Creating jail: {}.***REMOVED***".format(jail_directory.split(".")[0]))
 
-    metadata = extract(determine_file_type(jail_directory),jail_directory)
-    validate(metadata)
+    try:
+        file_type = je.determine_file_type(jail_directory)
+    except je.InvalidFileType as err:
+        sys.exit(err.message)
+
+    try:
+        metadata = je.extract(file_type, jail_directory)
+    except (je.FailedToExtractFile, je.InvalidJSONError) as err:
+        sys.exit(err.message)
+
+    try:
+        je.validate(metadata)
+    except (je.InvalidHostname, je.InvalidMetadata, je.ValidationError) as err:
+        sys.exit(err.message)
 
     jail_name = metadata["hostname"].replace('-', '_')
    

@@ -42,7 +42,7 @@ class FailedToExtractFile(ExtractionError):
     pass
 
 
-class InvalidJsonError(ExtractionError):
+class InvalidJSONError(ExtractionError):
     """An exception that is raised when there is invalid JSON present."""
     pass
 
@@ -167,7 +167,7 @@ def extract_zip(zipfilename):
                     try:
                         metadata = json.loads(bytes.decode(myzip.open(n).read()))
                     except ValueError:
-                        raise InvalidJsonError("Error decoding json failed")
+                        raise InvalidJSONError("Error decoding json failed")
                 elif os.path.basename(n).endswith('.pub'):
                     username = os.path.splitext(os.path.basename(n))[0]
                     key = bytes.decode(myzip.open(n).read())
@@ -195,7 +195,7 @@ def extract_dir(directory):
                     try:
                         metadata = json.loads(meta.read())
                     except ValueError:
-                        raise InvalidJsonError("Error: Could no decode JSON")
+                        raise InvalidJSONError("Error: Could no decode JSON")
             elif os.path.basename(file).endswith(".pub"):
                 username = os.path.splitext(file)[0]
                 with open(os.path.join(subdir, file), 'r') as key:
@@ -225,7 +225,7 @@ def distribute(pub_keys, metadata):
                     m["publicKey"] = pub_keys[k]
         return metadata
     except KeyError:
-        raise InvalidJsonError("Malformed JSON. Better check that out.")
+        raise InvalidJSONError("Malformed JSON. Better check that out.")
 
 
 ## VALIDATE ##
