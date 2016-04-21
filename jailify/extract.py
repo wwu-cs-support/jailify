@@ -75,18 +75,18 @@ def determine_file_type(file_name):
                          representing one of the four types.
     """
     if os.path.isdir(file_name):
-        file_type = "dir"
+        file_type = 'dir'
     else:
-        magic_type = magic.from_file(file_name)
+        magic_type = magic.from_file(file_name).decode('utf-8')
 
-        if magic_type[:5] == b'bzip2':
-            file_type = "bz2"
-        elif magic_type[:4] == b'gzip':
-            file_type = "gz"
+        if magic_type[:5] == 'bzip2':
+            file_type = 'bz2'
+        elif magic_type[:4] == 'gzip':
+            file_type = 'gz'
         elif zipfile.is_zipfile(file_name):
-            file_type = "zip"
-        elif magic_type[:2] == b"XZ":
-            file_type = "xz"
+            file_type = 'zip'
+        elif magic_type[:2] == 'XZ':
+            file_type = 'xz'
         else:
             raise InvalidFileType("Error: {} is an invalid file type.".format(mime_type)) 
     return file_type
