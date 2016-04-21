@@ -4,11 +4,11 @@ import sys
 import click
 import functools
 import jailify.extract as je
+import jailify.creation as jc
 
 from jailify.users import create_users
 from jailify.delete import destroy_jail
-from jailify.creation import create_jail
-from jailify.util import create_snapshot 
+from jailify.util import create_snapshot, CommandError
 
 
 PROG_NAME = os.path.basename(sys.argv and sys.argv[0] or __file__)
@@ -56,8 +56,8 @@ def jailify_main(jail_directory):
         user_keys.append(user['publicKey'])
 
     try:
-        create_jail(jail_name)
-    except (InvalidJailName, RegularExpressionError) as e:
+        jc.create_jail(jail_name)
+    except (jc.InvalidJailName, jc.RegularExpressionError, CommandError) as e:
         sys.exit(e.message)
 
     create_users(jail_name, usernames, usernames, user_gecos, user_keys)
