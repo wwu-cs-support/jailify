@@ -3,10 +3,10 @@ import re
 import sys
 import click
 import functools
+import jailify.users as ju
 import jailify.extract as je
 import jailify.creation as jc
 
-from jailify.users import create_users
 from jailify.delete import destroy_jail
 from jailify.util import create_snapshot, CommandError
 
@@ -61,8 +61,8 @@ def jailify_main(jail_directory):
         sys.exit(err.message)
 
     try:
-        create_users(jail_name, usernames, usernames, user_gecos, user_keys)
-    except (SSHKeyError, SendMailError, CommandError) as err:
+        ju.create_users(jail_name, usernames, usernames, user_gecos, user_keys)
+    except (ju.SSHKeyError, ju.SendMailError, CommandError) as err:
         sys.exit(err.message)
 
     create_snapshot(jail_name)

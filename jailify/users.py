@@ -20,10 +20,12 @@ class UserError(Exception):
 
 
 class SSHKeyError(UserError):
+    """An exception that is raised when jailify cannot place ssh keys."""
     pass
 
 
 class SendMailError(UserError):
+    """An exception that is raised when send mail has failed. """
     pass
 
 
