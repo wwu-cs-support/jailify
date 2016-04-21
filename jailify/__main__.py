@@ -55,7 +55,11 @@ def jailify_main(jail_directory):
         user_gecos.append(user['name'])
         user_keys.append(user['publicKey'])
 
-    create_jail(jail_name)
+    try:
+        create_jail(jail_name)
+    except (InvalidJailName, RegularExpressionError) as e:
+        sys.exit(e.message)
+
     create_users(jail_name, usernames, usernames, user_gecos, user_keys)
     create_snapshot(jail_name)
 

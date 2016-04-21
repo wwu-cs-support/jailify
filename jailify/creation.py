@@ -8,8 +8,8 @@ from jailify.util import do_command
 from jailify.util import InvalidJailName
 from jailify.util import do_command_with_return
 
-class RegularExpressionError(Exception):
-    """An exception that is raised when a regular expression fails to return a desired result.
+class CreationError(Exception):
+    """An exception that is raised when creating a jail fails.
 
     Args:
         message (str): an error message
@@ -19,6 +19,12 @@ class RegularExpressionError(Exception):
     """
     def __init__(self, message):
         self.message = message
+
+class RegularExpressionError(CreationError)
+    pass
+
+class InvalidJailNameError(CreationError)
+    pass
 
 def get_interface():
     """Finds the correct interface.
