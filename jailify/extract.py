@@ -10,6 +10,7 @@ import os
 import re
 import sys
 import json
+import magic
 import tarfile
 import zipfile
 import os.path
@@ -73,19 +74,21 @@ def determine_file_type(file_name):
                          compressed file. Otherwise returns a string
                          representing one of the four types.
     """
-    mime_type = mimetypes.guess_type(file_name)[1]
     if os.path.isdir(file_name):
         file_type = "dir"
-    elif mime_type == 'bzip2':
-        file_type = "bz2"
-    elif mime_type == 'gzip':
-        file_type = "gz"
-    elif zipfile.is_zipfile(file_name):
-        file_type = "zip"
-    elif mime_type == "xz":
-        file_type = "xz"
     else:
-        raise InvalidFileType("Error: {} is an invalid file type.".format(mime_type)) 
+        magic_type = magic.from_file(file_name)
+
+        if magic_type[:5] == b'bzip2':
+            file_type = "bz2"
+        elif magic_type[:4] == b'gzip':
+            file_type = "gz"
+        elif zipfile.is_zipfile(file_name):
+            file_type = "zip"
+        elif magic_type[:2] == b"XZ":
+            file_type = "xz"
+        else:
+            raise InvalidFileType("Error: {} is an invalid file type.".format(mime_type)) 
     return file_type
 
 
