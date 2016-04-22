@@ -57,7 +57,7 @@ def jailify_main(jail_directory):
 
     try:
         jc.create_jail(jail_name)
-    except (jc.InvalidJailName, jc.RegularExpressionError, CommandError) as err:
+    except (jc.InvalidJailNameError, jc.RegularExpressionError, CommandError) as err:
         sys.exit(err.message)
 
     try:

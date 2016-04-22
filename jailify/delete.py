@@ -5,7 +5,6 @@ import sys
 import fileinput
 import subprocess
 from jailify.util import do_command
-from jailify.util import InvalidJailName
 
 def destroy_jail(jail_name):
     """Destroys a jail.

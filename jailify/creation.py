@@ -5,7 +5,6 @@ import os.path
 import ipaddress
 import subprocess
 from jailify.util import do_command
-from jailify.util import InvalidJailName
 from jailify.util import do_command_with_return
 
 class CreationError(Exception):
@@ -20,10 +19,10 @@ class CreationError(Exception):
     def __init__(self, message):
         self.message = message
 
-class RegularExpressionError(CreationError)
+class RegularExpressionError(CreationError):
     pass
 
-class InvalidJailNameError(CreationError)
+class InvalidJailNameError(CreationError):
     pass
 
 def get_interface():
@@ -191,4 +190,4 @@ def create_jail(jail_name):
         clone_base_jail(snapshot, jail_name)
         start_jail(jail_name)
     else:
-        raise InvalidJailName("Error: {} Jail name already exists".format(jail_name))
+        raise InvalidJailNameError("Error: {} Jail name already exists".format(jail_name))
