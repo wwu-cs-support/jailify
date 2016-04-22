@@ -44,7 +44,7 @@ def add_group(jail, group):
 
 
 def add_user(jail, user, group, gecos, groups=["wheel"],
-             skel_dir="/usr/share/skel", shell="/bin/tsch",
+             skel_dir="/usr/share/skel", shell="/bin/tcsh",
              passwd_method="random"):
     """Uses pw adduser to add a user to the current jail.
 
