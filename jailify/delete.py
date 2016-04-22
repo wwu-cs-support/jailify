@@ -18,7 +18,7 @@ class DeletionError(Exception):
     def __init__(self, message):
         self.message = message
 
-class InvalidJailNameError(DeletionError):
+class InvalidJailName(DeletionError):
     pass
 
 def destroy_jail(jail_name):
@@ -36,7 +36,7 @@ def destroy_jail(jail_name):
         InvalidJailName: If ``jail_name`` is empty this exception is raised.
     """
     if not jail_name:
-        raise InvalidJailNameError("Error : jail name cannot be empty")
+        raise InvalidJailName("Error : jail name cannot be empty")
     else:
         stop_jail(jail_name)
         zfs_destroy(jail_name)

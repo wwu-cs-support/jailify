@@ -7,8 +7,9 @@ import jailify.users as ju
 import jailify.extract as je
 import jailify.creation as jc
 
-from jailify.delete import destroy_jail
+from jailify.users import create_users
 from jailify.util import create_snapshot, CommandError
+from jailify.delete import destroy_jail, InvalidJailName
 
 
 PROG_NAME = os.path.basename(sys.argv and sys.argv[0] or __file__)
@@ -129,7 +130,10 @@ def destroy_jail_prompt(jail_name, abort_output=True):
             if confirm_destroy:
                 print("destroying {} ...........".format(jail_name))
                 #Progress bar for destruction.
-                destroy_jail(jail_name)
+                try:
+                    destroy_jail(jail_name)
+                except (InvalidJailName, CommandError) as err:
+                    sys.exit(err.message)
             if abort_output:
                 sys.exit("{}: info: Destruction of {} was aborted.".format(PROG_NAME, jail_name))
         else:
@@ -174,7 +178,10 @@ def destroy_all_jails_prompt(jail_names):
             for jail in jail_names:
                 print("Destroying {}".format(jail))
                 #progress bar for jail destruction
-                #destroy_jail(jail)
+                try:
+                    destroy_jail(jail)
+                except (InvalidJailName, CommandError) as err:
+                    sys.exit(err.message)
         else:
             confirm_individual_destruction(jail_names)
     else:
