@@ -36,6 +36,9 @@ def get_interface():
 
     Returns:
         interface (str): correct interface
+
+    Raises:
+        RegularExpressionError: If multiple interfaces are detected this exception is raised.
     """
     cmd = ('ifconfig') 
     output = do_command_with_return(cmd)
@@ -76,6 +79,9 @@ def get_latest_snapshot():
 
     Returns:
         latest_snapshot (str): a string of the name of the latest snapshot
+
+    Raises:
+        RegularExpressionError: If no snapshots are found, this exception is raised.
     """
     cmd = ["zfs", "list", "-t", "snapshot"]
     zfs_output = do_command_with_return(cmd)
@@ -91,15 +97,18 @@ def get_lowest_ip():
 
     Finds the next available ip address by searching through the /etc/jail.conf file.
     Then uses a regular expression to find all ip addresses in use and the range available.
-    The format of the range of ip addresses must be as follows: #ip-range = 127.0.0.0/24;
     Starting with the lowest ip in the range available for jails, if that ip is not being
-    used, it is returned. An exception is raised if no ip addresses are available.
+    used, it is returned. The format of the range of ip addresses in /ect/jail.conf must be
+    as follows: #ip-range = 127.0.0.0/24
 
     Args:
         None
 
     Returns:
         A string that is the next available ip address
+
+    Raises:
+        ValueError: If no ip addresses are available, this exception is raised.
     """
     with open('/etc/jail.conf', 'r') as jail_config:
         jail_config = jail_config.read()
@@ -121,7 +130,7 @@ def add_entry(ip_addr, jail_name, interface):
     Args:
         ip_addr (str): the next available ip address. Found by get_lowest_ip().
         jail_name (str): the name for the jail that is being created.
-        interface (str): the primary interface. Currently hardcoded to 'em0'.
+        interface (str): the primary interface. Found by get_latest_snapshot().
 
     Returns:
         None
@@ -137,7 +146,8 @@ def add_entry(ip_addr, jail_name, interface):
 
 def create_fstab_file(jail_name):
     """Creates an empty file in the /etc/ directory called fstab.jail_name where jail_name is an argument
-    Argument:
+
+    Args:
         jail_name (str): the name for the jail that is being created
 
     Returns:
@@ -152,7 +162,7 @@ def create_fstab_file(jail_name):
 def clone_base_jail(snapshot, jail_name):
     """Clones the base jail.
 
-    Arguments:
+    Args:
         snapshot (str): the latest snapshot. Found by get_latest_snapshot.
         jail_name (str): the name for the jail that is being created.
 
@@ -171,7 +181,7 @@ def clone_base_jail(snapshot, jail_name):
 def start_jail(jail_name):
     """Starts jail by running 'service jail start jail_name' where jail_name is an argument.
 
-    Arguments:
+    Args:
         jail_name (str): the name for the jail that is being created.
 
     Returns:
@@ -181,6 +191,14 @@ def start_jail(jail_name):
     do_command(cmd)
 
 def create_jail(jail_name):
+    """Creates a jail by calling helper functions.
+
+    Args:
+        jail_name (str): the name for the jail that is being created.
+
+    Returns:
+        None
+    """
     lowest_ip = get_lowest_ip()
     interface = get_interface()
     snapshot = get_latest_snapshot()

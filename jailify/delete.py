@@ -7,6 +7,14 @@ import subprocess
 from jailify.util import do_command
 
 class DeletionError(Exception):
+    """An exception that is raised when deleting a jail fails.
+
+    Args:
+        message (str): an error message
+
+    Attributes:
+        message (str): an error message
+    """
     def __init__(self, message):
         self.message = message
 
