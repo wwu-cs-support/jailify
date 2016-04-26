@@ -7,8 +7,8 @@ import jailify.users as ju
 import jailify.extract as je
 import jailify.creation as jc
 
-from jailify.delete import destroy_jail
 from jailify.util import create_snapshot, CommandError
+from jailify.delete import destroy_jail, InvalidJailName
 
 
 PROG_NAME = os.path.basename(sys.argv and sys.argv[0] or __file__)
@@ -129,7 +129,10 @@ def destroy_jail_prompt(jail_name, abort_output=True):
             if confirm_destroy:
                 print("destroying {} ...........".format(jail_name))
                 #Progress bar for destruction.
-                destroy_jail(jail_name)
+                try:
+                    destroy_jail(jail_name)
+                except (InvalidJailName, CommandError) as err:
+                    sys.exit(err.message)
             if abort_output:
                 sys.exit("{}: info: Destruction of {} was aborted.".format(PROG_NAME, jail_name))
         else:
@@ -164,17 +167,20 @@ def destroy_all_jails_prompt(jail_names):
 
     """    
     print("The following jails are allocated for destruction:") 
-    for jail in jail_names:
-        print("    - {:^10}".format(jail))
+    for jail_name in jail_names:
+        print("    - {:^10}".format(jail_name))
     destroy = click.confirm("Destroy all of them?", default=False)
     if destroy:
         all_destroy = click.confirm(("[{}]: This will destroy ALL jail data for the above jails."
         "Are you sure?".format(click.style("WARNING", fg='red'))), default=False)
         if all_destroy:
-            for jail in jail_names:
-                print("Destroying {}".format(jail))
+            for jail_name in jail_names:
+                print("Destroying {}".format(jail_name))
                 #progress bar for jail destruction
-                #destroy_jail(jail)
+                try:
+                    destroy_jail(jail_name)
+                except (InvalidJailName, CommandError) as err:
+                    sys.exit(err.message)
         else:
             confirm_individual_destruction(jail_names)
     else:

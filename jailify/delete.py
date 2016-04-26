@@ -6,6 +6,21 @@ import fileinput
 import subprocess
 from jailify.util import do_command
 
+class DeletionError(Exception):
+    """An exception that is raised when deleting a jail fails.
+
+    Args:
+        message (str): an error message
+
+    Attributes:
+        message (str): an error message
+    """
+    def __init__(self, message):
+        self.message = message
+
+class InvalidJailName(DeletionError):
+    pass
+
 def destroy_jail(jail_name):
     """Destroys a jail.
 
@@ -16,11 +31,17 @@ def destroy_jail(jail_name):
 
     Returns:
         None
+
+    Raises:
+        InvalidJailName: If ``jail_name`` is empty this exception is raised.
     """
-    stop_jail(jail_name)
-    zfs_destroy(jail_name)
-    remove_fstab(jail_name)
-    edit_jailconf_file(jail_name)
+    if not jail_name:
+        raise InvalidJailName("Error : jail name cannot be empty")
+    else:
+        stop_jail(jail_name)
+        zfs_destroy(jail_name)
+        remove_fstab(jail_name)
+        edit_jailconf_file(jail_name)
 
 def stop_jail(jail_name):
     """Stops the jail.
@@ -46,14 +67,7 @@ def zfs_destroy(jail_name):
 
     Returns:
         None
-
-    Raises:
-        InvalidJailName: If ``jail_name`` is falsy this exception is raised
-            to avoid destroying the entire root dataset.
     """
-    if not jail_name:
-        raise InvalidJailName("Jail name cannot be empty")
-
     zfs_path = "zroot/jail/" + jail_name
     zfs_destroy_cmd = ("zfs", "destroy", "-r", "zroot/jail/" + jail_name)
     do_command(zfs_destroy_cmd)
@@ -77,9 +91,6 @@ def remove_fstab(jail_name):
 def edit_jailconf_file(jail_name):
     """Goes into /etc/jail.conf and removes corresponding entry to a given jail name
 
-    Note: Currently has to open file twice. A better way to account for extra new line would
-    be to delete the line above the jail name.
-
     Args:
         jail_name (str): the jail that is being deleted
 
@@ -96,12 +107,3 @@ def edit_jailconf_file(jail_name):
 
     with open("/etc/jail.conf", "w") as jail_conf_file:
         jail_conf_file.write(jail_conf)
-
-if __name__ == '__main__':
-    if(len(sys.argv) == 1):
-        print("No jail specified")
-        sys.exit(1)
-    elif(len(sys.argv) == 2):
-        destroy_jail(sys.argv[1])
-    else:
-        print("Incorrect number of arguments")

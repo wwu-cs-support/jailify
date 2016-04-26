@@ -25,7 +25,7 @@ host.
 # Installation
 To install `jailify` run the following command:
 ```
-pip install git+ssh://git@gitlab.***REMOVED***/cs-support/jailify.git@master
+pip install git+https://git@gitlab.***REMOVED***/cs-support/jailify.git@master
 ```
 
 ## `jailify`
