@@ -201,8 +201,11 @@ def extract_dir(directory):
                 with open(os.path.join(subdir, file), 'r') as key:
                     pub_keys[username] = key.read()
 
-    metadata = distribute(pub_keys, metadata)
-    return metadata
+    if metadata:
+        metadata = distribute(pub_keys, metadata)
+        return metadata
+    else:
+        raise FailedToExtractFile("Error: metadata.json is not present")
 
 
 ## DISTRIBUTE ##
@@ -256,6 +259,3 @@ def validate(metadata):
                 raise ValidationError("Error: Validation Failed")
         except KeyError:
             raise ValidationError("Error: Validation Error - Key Error")
-
-if __name__ == '__main__':
-    main(sys.argv)
