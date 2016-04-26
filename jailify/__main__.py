@@ -7,7 +7,6 @@ import jailify.users as ju
 import jailify.extract as je
 import jailify.creation as jc
 
-from jailify.users import create_users
 from jailify.util import create_snapshot, CommandError
 from jailify.delete import destroy_jail, InvalidJailName
 
