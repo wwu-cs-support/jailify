@@ -69,7 +69,7 @@ def zfs_destroy(jail_name):
         None
     """
     zfs_path = "zroot/jail/" + jail_name
-    zfs_destroy_cmd = ("zfs", "destroy", "-r", "zroot/jail/" + jail_name)
+    zfs_destroy_cmd = ("zfs", "destroy", "-rf", "zroot/jail/" + jail_name)
     do_command(zfs_destroy_cmd)
 
 def remove_fstab(jail_name):
