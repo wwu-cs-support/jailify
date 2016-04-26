@@ -118,7 +118,6 @@ def get_lowest_ip():
     ip_range = ip_range.group(0)
     ip_network = list(ipaddress.IPv4Network(ip_range).hosts())[2:]
 
-    print(ip_addrs)
     for ip in ip_network:
         if not (str(ip) in ip_addrs):
             return str(ip)
