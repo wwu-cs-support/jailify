@@ -129,7 +129,7 @@ def add_entry(ip_addr, jail_name, interface):
     Args:
         ip_addr (str): the next available ip address. Found by get_lowest_ip().
         jail_name (str): the name for the jail that is being created.
-        interface (str): the primary interface. Found by get_latest_snapshot().
+        interface (str): the primary interface. Found by get_interface().
 
     Returns:
         None
