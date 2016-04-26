@@ -167,18 +167,18 @@ def destroy_all_jails_prompt(jail_names):
 
     """    
     print("The following jails are allocated for destruction:") 
-    for jail in jail_names:
-        print("    - {:^10}".format(jail))
+    for jail_name in jail_names:
+        print("    - {:^10}".format(jail_name))
     destroy = click.confirm("Destroy all of them?", default=False)
     if destroy:
         all_destroy = click.confirm(("[{}]: This will destroy ALL jail data for the above jails."
         "Are you sure?".format(click.style("WARNING", fg='red'))), default=False)
         if all_destroy:
-            for jail in jail_names:
-                print("Destroying {}".format(jail))
+            for jail_name in jail_names:
+                print("Destroying {}".format(jail_name))
                 #progress bar for jail destruction
                 try:
-                    destroy_jail(jail)
+                    destroy_jail(jail_name)
                 except (InvalidJailName, CommandError) as err:
                     sys.exit(err.message)
         else:
