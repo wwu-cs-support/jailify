@@ -16,9 +16,11 @@ import zipfile
 import os.path
 import tempfile
 import mimetypes
+import subprocess
+from subprocess import DEVNULL, CalledProcessError
 
 REQUIRED_KEYS = ("projectName","client","hostname","facultyContact","client","teamMembers")
-REQUIRED_USER_KEYS = ("username","publicKey","email","name")
+REQUIRED_USER_KEYS = ("username","email","name")
 
 class ExtractionError(Exception):
     """An exception that is raised when the file type is invalid.
@@ -85,7 +87,9 @@ def determine_file_type(file_name):
     else:
         magic_type = magic.from_file(file_name).decode('utf-8')
 
-        if magic_type[:5] == 'bzip2':
+        if magic_type == 'POSIX tar archive':
+            file_type = 'tar'
+        elif magic_type[:5] == 'bzip2':
             file_type = 'bz2'
         elif magic_type[:4] == 'gzip':
             file_type = 'gz'
@@ -94,7 +98,7 @@ def determine_file_type(file_name):
         elif magic_type[:2] == 'XZ':
             file_type = 'xz'
         else:
-            raise InvalidFileType("Error: {} is an invalid file type.".format(mime_type))
+            raise InvalidFileType("Error: {} is an invalid file type.".format(magic_type))
     return file_type
 
 
@@ -111,14 +115,14 @@ def extract_tar(tar_path, comp_type):
     Returns:
         directory (str): The path to the extracted (or un-tarred)  directory.
     """
-    temp_dir = tempfile.gettempdir()
+    temp_dir = tempfile.mkdtemp()
     try:
-        with tarfile.open(tar_path, 'r:{}'.format(comp_type)) as tf:
+        with tarfile.open(tar_path, 'r{}'.format(":" + comp_type if comp_type in ("bz2", "gz", "xz") else "")) as tf:
             paths = []
             for member in tf.getmembers():
                 paths.append(os.path.join(temp_dir, member.path))
                 tf.extract(member, path=temp_dir)
-            return paths[0]
+            return os.path.dirname(paths[0])
     except (FileNotFoundError, PermissionError, tarfile.TarError):
         raise FailedToExtractFile("Error: {} does not exist, is not readable, or is malformed.".format(zip_path))
 
@@ -133,11 +137,12 @@ def extract_zip(zip_path):
     Returns:
         directory (str): The path to the unzipped directory.
     """
-    temp_dir = tempfile.gettempdir()
+    temp_dir = tempfile.mkdtemp()
     try:
         with zipfile.ZipFile(zip_path, 'r') as zf:
-            paths = [zf.extract(m, path=temp_dir) for m in zf.namelist()]
-            return paths[0]
+            valid_files = (n for n in zf.namelist() if n.endswith('.json') or n.endswith('.pub'))
+            paths = [zf.extract(m, path=temp_dir) for m in valid_files]
+            return os.path.dirname(paths[0])
     except (FileNotFoundError, PermissionError, zipfile.BadZipFile, zipfile.LargeZipFile):
         raise FailedToExtractFile("Error: {} does not exist, is not readable, or is malformed.".format(zip_path))
 
@@ -187,6 +192,15 @@ def validate_team_members(team_members):
         raise ValidationError("Error: Team member list is empty.")
 
 
+def valid_ssh_key(path):
+    command = ('/usr/bin/ssh-keygen', '-lf', path)
+    try:
+        subprocess.run(command, stdout=DEVNULL, stderr=DEVNULL, check=True)
+        return True
+    except CalledProcessError:
+        return False
+
+
 ## BUID_METADATA ##
 def build_metadata(directory):
     """Retrieves desired metadata and public keys from directory.
@@ -210,17 +224,20 @@ def build_metadata(directory):
             # Validate team member fields. Let exceptions bubble up.
             validate_team_members(team_members)
 
-            if len(os.listdir(directory)) != len(team_members + 1):
+            if len(os.listdir(directory)) != (len(team_members) + 1):
                 raise ExtraneousPublicKey("Error: Team members do not match public keys.")
 
             for member in team_members:
                 username = member['username']
                 pub_path = os.path.join(directory, "{}.pub".format(username))
-                try:
-                    with open(pub_path, "r") as pub_file:
-                        member['publicKey'] = pub_file.read().rstrip('\n')
-                except FileNotFoundError:
-                    raise FailedToExtractFile("Error: Missing public key for {}.".format(username))
+                if valid_ssh_key(pub_path):
+                    try:
+                        with open(pub_path, "r") as pub_file:
+                            member['publicKey'] = pub_file.read().rstrip('\n')
+                    except FileNotFoundError:
+                        raise FailedToExtractFile("Error: Missing public key for {}.".format(username))
+                else:
+                    raise ValidationError("Error: SSH key is invalid for {}.".format(username))
             return metadata
     except FileNotFoundError:
         raise FailedToExtractFile("Error: metadata.json does not exist.")
@@ -239,7 +256,7 @@ def get_metadata(file_type, filename):
     Returns:
         mdata (dict): the dictionary containig all metadata
     """
-    if file_type == "bz2" or file_type == "gz" or file_type == "xz":
+    if file_type in ("tar", "bz2", "gz", "xz"):
         path = extract_tar(filename, file_type)
     elif file_type == "zip":
         path = extract_zip(filename)
