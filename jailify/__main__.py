@@ -30,18 +30,15 @@ def jailify_main(jail_directory):
     print("Creating jail: {}.***REMOVED***".format(jail_directory.split(".")[0]))
 
     try:
-        file_type = je.determine_file_type(jail_directory)
+        file_type = determine_file_type(jail_directory)
     except je.InvalidFileType as err:
         sys.exit(err.message)
 
     try:
-        metadata = je.extract(file_type, jail_directory)
-    except (je.FailedToExtractFile, je.InvalidJSONError) as err:
-        sys.exit(err.message)
-
-    try:
-        je.validate(metadata)
-    except (je.InvalidHostname, je.InvalidMetadata, je.ValidationError) as err:
+        get_metadata(file_type, jail_directory)
+    except (je.FailedToExtractFile, je.ExtraneousPublicKey, 
+            je.InvalidJSONError, je.ValidationError, je.InvalidHostname,
+            je.InvalidMetadata, je.InvalidFileType) as err:
         sys.exit(err.message)
 
     jail_name = metadata["hostname"].replace('-', '_')

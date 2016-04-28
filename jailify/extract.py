@@ -98,30 +98,6 @@ def determine_file_type(file_name):
     return file_type
 
 
-## EXTRACT ##
-def extract(filetype, filename):
-    """Determines what type of extraction should be used on the file and calls
-       the appropriate extract function. Then returns the directory to be
-       worked with.
-
-    Args:
-        filetype (str): the type of file. 'dir', 'zip', 'xz', 'bzip2' or 'gzip'
-        filename (str): the name of the file as provided from the command line.
-                        Includes file extension.
-    Returns:
-        mdata (dict): the dictionary containig all metadata
-    """
-    if filetype == "bz2" or filetype == "gz" or filetype == "xz":
-        mdata = extract_tar(filename, filetype)
-    elif filetype == "zip":
-        mdata = extract_zip(filename)
-    elif filetype == "dir":
-        mdata = extract_dir(filename)
-    else:
-        raise FailedToExtractFile("Error: Could not extract data from {}.".format(filename))
-    return mdata
-
-
 ## EXTRACT_TAR ##
 def extract_tar(tar_path, comp_type):
     """Opens, extracts, and closes tar file that has been compressed with one
@@ -164,44 +140,6 @@ def extract_zip(zip_path):
             return paths[0]
     except (FileNotFoundError, PermissionError, zipfile.BadZipFile, zipfile.LargeZipFile):
         raise FailedToExtractFile("Error: {} does not exist, is not readable, or is malformed.".format(zip_path))
-
-## EXTRACT_DIR ##
-def extract_dir(directory):
-    """Retrieves desired metadata and public keys from directory.
-
-    Args:
-        directory (str): name of directory
-    Returns:
-        metadata (dict): the json contents and public keys in a dictionary.
-    """
-    try:
-        with open(os.path.join(directory, "metadata.json"), "r") as f:
-            try:
-                metadata = json.load(f)
-            except ValueError:
-                raise InvalidJSONError("Error: Malformed metadata.json.")
-            # Validate top-level JSON. Let exceptions bubble up.
-            validate_metadata(metadata)
-
-            team_members = metadata['teamMembers']
-
-            # Validate team member fields. Let exceptions bubble up.
-            validate_team_members(team_members)
-
-            if len(os.listdir(directory)) != len(team_members + 1):
-                raise ExtraneousPublicKey("Error: Team members do not match public keys.")
-
-            for member in team_members:
-                username = member['username']
-                pub_path = os.path.join(directory, "{}.pub".format(username))
-                try:
-                    with open(pub_path, "r") as pub_file:
-                        member['publicKey'] = pub_file.read().rstrip('\n')
-                except FileNotFoundError:
-                    raise FailedToExtractFile("Error: Missing public key for {}.".format(username))
-
-    except FileNotFoundError:
-        raise FailedToExtractFile("Error: metadata.json does not exist.")
 
 
 ## VALIDATE ##
@@ -247,3 +185,66 @@ def validate_team_members(team_members):
                 raise ValidationError("Error: Validation error - key error")
     else:
         raise ValidationError("Error: Team member list is empty.")
+
+
+## BUID_METADATA ##
+def build_metadata(directory):
+    """Retrieves desired metadata and public keys from directory.
+
+    Args:
+        directory (str): name of directory
+    Returns:
+        metadata (dict): the json contents and public keys in a dictionary.
+    """
+    try:
+        with open(os.path.join(directory, "metadata.json"), "r") as f:
+            try:
+                metadata = json.load(f)
+            except ValueError:
+                raise InvalidJSONError("Error: Malformed metadata.json.")
+            # Validate top-level JSON. Let exceptions bubble up.
+            validate_metadata(metadata)
+
+            team_members = metadata['teamMembers']
+
+            # Validate team member fields. Let exceptions bubble up.
+            validate_team_members(team_members)
+
+            if len(os.listdir(directory)) != len(team_members + 1):
+                raise ExtraneousPublicKey("Error: Team members do not match public keys.")
+
+            for member in team_members:
+                username = member['username']
+                pub_path = os.path.join(directory, "{}.pub".format(username))
+                try:
+                    with open(pub_path, "r") as pub_file:
+                        member['publicKey'] = pub_file.read().rstrip('\n')
+                except FileNotFoundError:
+                    raise FailedToExtractFile("Error: Missing public key for {}.".format(username))
+            return metadata
+    except FileNotFoundError:
+        raise FailedToExtractFile("Error: metadata.json does not exist.")
+
+
+## GET_METADATA ##
+def get_metadata(file_type, filename):
+    """Determines what type of extraction should be used on the file and calls
+       the appropriate extract function. Then returns the directory to be
+       worked with.
+
+    Args:
+        file_type (str): the type of file. 'dir', 'zip', 'xz', 'bzip2' or 'gzip'
+        filename (str): the name of the file as provided from the command line.
+                        Includes file extension.
+    Returns:
+        mdata (dict): the dictionary containig all metadata
+    """
+    if file_type == "bz2" or file_type == "gz" or file_type == "xz":
+        path = extract_tar(filename, file_type)
+    elif file_type == "zip":
+        path = extract_zip(filename)
+    elif file_type == "dir":
+        path = filename
+    else:
+        raise FailedToExtractFile("Error: Could not extract data from {}.".format(filename))
+    return build_metadata(path)
