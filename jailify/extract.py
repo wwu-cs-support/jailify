@@ -131,6 +131,7 @@ def extract_tar(filenametar, comptype):
                          dictionary.
     """
     pub_keys = {}
+    metadata = {}
     try:
         with tarfile.open(filenametar, 'r:{}'.format(comptype)) as tar:
             for f in tar:
@@ -143,9 +144,13 @@ def extract_tar(filenametar, comptype):
                     username = os.path.splitext(os.path.basename(f.name))[0]
                     key = bytes.decode(tar.extractfile(f).read())
                     pub_keys[username] = key
-        
-        metadata = distribute(pub_keys,metadata)
-        return metadata
+
+        if metadata:     
+            metadata = distribute(pub_keys,metadata)
+            return metadata
+        else:
+            raise FailedToExtractFile("Error: metadata.json does not exist")
+
     except tarfile.TarError:
         raise FailedToExtractFile("Error: Failed to extract the tar file")
 
@@ -160,6 +165,7 @@ def extract_zip(zipfilename):
         metadata (dict): the json contents and public keys in a directory
    """
     pub_keys = {}
+    metadata = {}
     try:
         with zipfile.ZipFile(zipfilename) as myzip:
             for n in myzip.namelist():
@@ -172,8 +178,13 @@ def extract_zip(zipfilename):
                     username = os.path.splitext(os.path.basename(n))[0]
                     key = bytes.decode(myzip.open(n).read())
                     pub_keys[username] = key
-        metadata = distribute(pub_keys, metadata)
-        return metadata
+        
+        if metadata:
+            metadata = distribute(pub_keys, metadata)
+            return metadata
+        else:
+            raise FailedToExtractFile("Error: metadata.json does not exist")
+
     except zipfile.BadZipFile:
         raise FailedToExtractFile("Error: Failed to extract the zip file")
 
@@ -188,6 +199,7 @@ def extract_dir(directory):
         metadata (dict): the json contents and public keys in a dictionary.
     """
     pub_keys = {}
+    metadata = {}
     for subdir, dirs, files in os.walk(directory):
         for file in files:
             if os.path.basename(file) == "metadata.json":
