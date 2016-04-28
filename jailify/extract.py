@@ -14,6 +14,7 @@ import magic
 import tarfile
 import zipfile
 import os.path
+import tempfile
 import mimetypes
 
 REQUIRED_KEYS = ("projectName","client","hostname","facultyContact","client","teamMembers")
@@ -93,14 +94,14 @@ def determine_file_type(file_name):
         elif magic_type[:2] == 'XZ':
             file_type = 'xz'
         else:
-            raise InvalidFileType("Error: {} is an invalid file type.".format(mime_type)) 
+            raise InvalidFileType("Error: {} is an invalid file type.".format(mime_type))
     return file_type
 
 
 ## EXTRACT ##
 def extract(filetype, filename):
     """Determines what type of extraction should be used on the file and calls
-       the appropriate extract function. Then returns the directory to be 
+       the appropriate extract function. Then returns the directory to be
        worked with.
 
     Args:
@@ -117,82 +118,52 @@ def extract(filetype, filename):
     elif filetype == "dir":
         mdata = extract_dir(filename)
     else:
-        raise FailedToExtractFile("Error: Could not extract data from {}.".format(filename))    
+        raise FailedToExtractFile("Error: Could not extract data from {}.".format(filename))
     return mdata
 
 
 ## EXTRACT_TAR ##
-def extract_tar(filenametar, comptype):
+def extract_tar(tar_path, comp_type):
     """Opens, extracts, and closes tar file that has been compressed with one
        of gzip, xz, and bzip2.
 
     Args:
-        filenametar (str): the name of the file as provided on the command
-                           line.
-        comptype    (str): the compression type (bzip2, gzip or xz) to be
+        tar_path (str): The path to the tar file.
+        comp_type    (str): the compression type (bzip2, gzip or xz) to be
                            passed in when decompressing.
+
     Returns:
-        metadata (dict): the json contents and public keys combined into a
-                         dictionary.
+        directory (str): The path to the extracted (or un-tarred)  directory.
     """
-    pub_keys = {}
-    metadata = {}
+    temp_dir = tempfile.gettempdir()
     try:
-        with tarfile.open(filenametar, 'r:{}'.format(comptype)) as tar:
-            for f in tar:
-                if os.path.basename(f.name) == "metadata.json":
-                    try:
-                        metadata = json.loads(bytes.decode(tar.extractfile(f).read()))
-                    except ValueError:
-                        raise InvalidJsonException("Error: Decoding JSON has failed")
-                elif os.path.basename(f.name).endswith('.pub'):
-                    username = os.path.splitext(os.path.basename(f.name))[0]
-                    key = bytes.decode(tar.extractfile(f).read())
-                    pub_keys[username] = key
-
-        if metadata:     
-            metadata = distribute(pub_keys,metadata)
-            return metadata
-        else:
-            raise FailedToExtractFile("Error: metadata.json does not exist")
-
-    except tarfile.TarError:
-        raise FailedToExtractFile("Error: Failed to extract the tar file")
+        with tarfile.open(tar_path, 'r:{}'.format(comp_type)) as tf:
+            paths = []
+            for member in tf.getmembers():
+                paths.append(os.path.join(temp_dir, member.path))
+                tf.extract(member, path=temp_dir)
+            return paths[0]
+    except (FileNotFoundError, PermissionError, tarfile.TarError):
+        raise FailedToExtractFile("Error: {} does not exist, is not readable, or is malformed.".format(zip_path))
 
 
 ## EXTRACT_ZIP ##
-def extract_zip(zipfilename):
+def extract_zip(zip_path):
     """Opens, extracts, and closes zip files.
 
     Args:
-        zipfilename (str): the name of the file
+        zip_path (str): The path to the zip file.
+
     Returns:
-        metadata (dict): the json contents and public keys in a directory
-   """
-    pub_keys = {}
-    metadata = {}
+        directory (str): The path to the unzipped directory.
+    """
+    temp_dir = tempfile.gettempdir()
     try:
-        with zipfile.ZipFile(zipfilename) as myzip:
-            for n in myzip.namelist():
-                if os.path.basename(n) == "metadata.json":
-                    try:
-                        metadata = json.loads(bytes.decode(myzip.open(n).read()))
-                    except ValueError:
-                        raise InvalidJSONError("Error decoding json failed")
-                elif os.path.basename(n).endswith('.pub'):
-                    username = os.path.splitext(os.path.basename(n))[0]
-                    key = bytes.decode(myzip.open(n).read())
-                    pub_keys[username] = key
-        
-        if metadata:
-            metadata = distribute(pub_keys, metadata)
-            return metadata
-        else:
-            raise FailedToExtractFile("Error: metadata.json does not exist")
-
-    except zipfile.BadZipFile:
-        raise FailedToExtractFile("Error: Failed to extract the zip file")
-
+        with zipfile.ZipFile(zip_path, 'r') as zf:
+            paths = [zf.extract(m, path=temp_dir) for m in zf.namelist()]
+            return paths[0]
+    except (FileNotFoundError, PermissionError, zipfile.BadZipFile, zipfile.LargeZipFile):
+        raise FailedToExtractFile("Error: {} does not exist, is not readable, or is malformed.".format(zip_path))
 
 ## EXTRACT_DIR ##
 def extract_dir(directory):
