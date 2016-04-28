@@ -42,6 +42,11 @@ class FailedToExtractFile(ExtractionError):
     pass
 
 
+class ExtraneousPublicKey(ExtractionError):
+    """An exception that is raised when jailify finds more public keys than team members."""
+    pass
+
+
 class InvalidJSONError(ExtractionError):
     """An exception that is raised when there is invalid JSON present."""
     pass
@@ -198,76 +203,76 @@ def extract_dir(directory):
     Returns:
         metadata (dict): the json contents and public keys in a dictionary.
     """
-    pub_keys = {}
-    metadata = {}
-    for subdir, dirs, files in os.walk(directory):
-        for file in files:
-            if os.path.basename(file) == "metadata.json":
-                with open(os.path.join(subdir,file), 'r') as meta:
-                    try:
-                        metadata = json.loads(meta.read())
-                    except ValueError:
-                        raise InvalidJSONError("Error: Could no decode JSON")
-            elif os.path.basename(file).endswith(".pub"):
-                username = os.path.splitext(file)[0]
-                with open(os.path.join(subdir, file), 'r') as key:
-                    pub_keys[username] = key.read()
-
-    if metadata:
-        metadata = distribute(pub_keys, metadata)
-        return metadata
-    else:
-        raise FailedToExtractFile("Error: metadata.json is not present")
-
-
-## DISTRIBUTE ##
-def distribute(pub_keys, metadata):
-    """"Takes the public keys contained in pub_keys and distributes them into
-         metadata dictionary for each user.
-
-    Args:
-        pub_keys (dict): the dictionary containing usernames and public keys.
-        metadata (dict): the dictionary containing the extracted metadata.
-    Returns:
-        metadata (dict): the same metadata as before, but with a new field for
-                         each user called "publicKey" & the corresponding key.
-    """
     try:
-        for k in pub_keys.keys():
-            for m in metadata["teamMembers"]:
-                if k == m["username"]:
-                    pub_keys[k] = pub_keys[k].strip()
-                    m["publicKey"] = pub_keys[k]
-        return metadata
-    except KeyError:
-        raise InvalidJSONError("Malformed JSON. Better check that out.")
+        with open(os.path.join(directory, "metadata.json"), "r") as f:
+            try:
+                metadata = json.load(f)
+            except ValueError:
+                raise InvalidJSONError("Error: Malformed metadata.json.")
+            # Validate top-level JSON. Let exceptions bubble up.
+            validate_metadata(metadata)
+
+            team_members = metadata['teamMembers']
+
+            # Validate team member fields. Let exceptions bubble up.
+            validate_team_members(team_members)
+
+            if len(os.listdir(directory)) != len(team_members + 1):
+                raise ExtraneousPublicKey("Error: Team members do not match public keys.")
+
+            for member in team_members:
+                username = member['username']
+                pub_path = os.path.join(directory, "{}.pub".format(username))
+                try:
+                    with open(pub_path, "r") as pub_file:
+                        member['publicKey'] = pub_file.read().rstrip('\n')
+                except FileNotFoundError:
+                    raise FailedToExtractFile("Error: Missing public key for {}.".format(username))
+
+    except FileNotFoundError:
+        raise FailedToExtractFile("Error: metadata.json does not exist.")
 
 
 ## VALIDATE ##
-def validate(metadata):
-    """Validates the keys, hostname, and team member usernames of the metadata
-       dictionary. Relies on jailify.extract.REQUIRED_KEYS and
-       jailify.extract.REQUIRED_USER_KEYS.
+def validate_metadata(metadata):
+    """
+    Validates the metadata by verifying that its keys match
+    ``jailify.extract.REQUIRED_KEYS``.
 
     Args:
         metadata (dict): metadata in dictionary form
+
     Returns:
         None
     """
     ## validate metadata ##
-    if all(k in metadata for k in REQUIRED_KEYS):
+    if all(key in metadata for key in REQUIRED_KEYS):
         regex = re.compile('^(?![0-9]+$)(?!-)[a-zA-Z0-9-]{,63}(?<!-)$')
         match = regex.match(metadata["hostname"])
         if not match:
-            raise InvalidHostname("Error: Hostname Invalid");
+            raise InvalidHostname("Error: Hostname Invalid")
     else:
-        raise InvalidMetadata("Error: Metadata parameters are invalid");
-    ## validate team members##
-    teamMembers = metadata["teamMembers"]
-    for member in teamMembers:
-        try:
-            if not (all(k in member for k in REQUIRED_USER_KEYS) and
-                member["username"] == member["publicKey"].split()[-1]):
-                raise ValidationError("Error: Validation Failed")
-        except KeyError:
-            raise ValidationError("Error: Validation Error - Key Error")
+        raise InvalidMetadata("Error: Metadata parameters are invalid")
+
+
+def validate_team_members(team_members):
+    """
+    Validates the team member dictionaries in a ``team_members`` list by
+    verifying that each team member's keys match
+    ``jailify.extract.REQUIRED_USER_KEYS``.
+
+    Args:
+        team_members (list): a list of team member dictionaries
+
+    Returns:
+        None
+    """
+    if team_members:
+        for member in team_members:
+            try:
+                if not (all(key in member for key in REQUIRED_USER_KEYS)):
+                    raise ValidationError("Error: Validation failed.")
+            except KeyError:
+                raise ValidationError("Error: Validation error - key error")
+    else:
+        raise ValidationError("Error: Team member list is empty.")
