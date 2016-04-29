@@ -4,11 +4,11 @@ import sys
 import click
 import functools
 import jailify.users as ju
+import jailify.delete as jd
 import jailify.extract as je
 import jailify.creation as jc
 
 from jailify.util import msg, create_snapshot, CommandError
-from jailify.delete import destroy_jail, InvalidJailName
 
 
 PROG_NAME = os.path.basename(sys.argv and sys.argv[0] or __file__)
@@ -147,24 +147,22 @@ def destroy_jail_prompt(jail_name, abort_output=True):
         None
     """
     if jail_name is None:
-        sys.exit("{}: error: The jail specified cannot be found".format(PROG_NAME))
+        sys.exit(msg(PROG_NAME, 'error', 'red', 'the specified jail cannot be found'))
     else:
-        destroy = click.confirm("Destroy {}.***REMOVED***?".format(jail_name), default=False)
+        destroy = click.confirm(msg(PROG_NAME, 'prompt', 'magenta', "destroy {}?".format(jail_name)), default=False)
         if destroy:
-            confirm_destroy = click.confirm(("[WARNING]: This will destroy ALL jail data for "
-                    "{}.***REMOVED***. ARE you sure?".format(jail_name)), default=False)
+            confirm_destroy = click.confirm(msg(PROG_NAME, 'WARNING', 'yellow', "this will destroy ALL jail data for {}".format(jail_name)), default=False)
             if confirm_destroy:
-                print("destroying {} ...........".format(jail_name))
-                #Progress bar for destruction.
+                click.echo(msg(PROG_NAME, 'info', 'cyan', "destroying {}".format(jail_name)))
                 try:
                     destroy_jail(jail_name)
-                except (InvalidJailName, CommandError) as err:
-                    sys.exit(err.message)
+                except (jd.InvalidJailName, jd.CommandError) as err:
+                    sys.exit(msg(PROG_NAME, 'error', 'red', err.message))
             if abort_output:
-                sys.exit("{}: info: Destruction of {} was aborted.".format(PROG_NAME, jail_name))
+                sys.exit(msg(PROG_NAME, 'info', 'cyan', "aborted destruction of {}".format(jail_name)))
         else:
             if abort_output:
-                sys.exit("{}: info: Destruction of {} was aborted.".format(PROG_NAME, jail_name))
+                sys.exit(msg(PROG_NAME, 'info', 'cyan', "aborted destruction of {}".format(jail_name)))
 
 
 def confirm_individual_destruction(jail_names):
@@ -177,7 +175,7 @@ def confirm_individual_destruction(jail_names):
         None
 
     """
-    single_destroy = click.confirm("Destroy them individually?", default=False)
+    single_destroy = click.confirm(msg(PROG_NAME, 'prompt', 'magenta', 'destroy them individually?'), default=False)
     if single_destroy:
         for jail in jail_names:
             destroy_jail_prompt(jail, abort_output=False)
@@ -193,22 +191,50 @@ def destroy_all_jails_prompt(jail_names):
         None
 
     """    
-    print("The following jails are allocated for destruction:") 
+    click.echo(msg(PROG_NAME, 'info', 'cyan', 'the following jails can be destroyed:'))
     for jail_name in jail_names:
-        print("    - {:^10}".format(jail_name))
-    destroy = click.confirm("Destroy all of them?", default=False)
+        click.echo("    - {:^10}".format(jail_name))
+    destroy = click.confirm(msg(PROG_NAME, 'prompt', 'magenta', 'destroy all of them?'), default=False)
     if destroy:
-        all_destroy = click.confirm(("[{}]: This will destroy ALL jail data for the above jails."
-        "Are you sure?".format(click.style("WARNING", fg='red'))), default=False)
+        all_destroy = click.confirm(msg(PROG_NAME, 'WARNING', 'yellow', 'this will destroy ALL data for the above jails. are you sure?'), default=False)
         if all_destroy:
             for jail_name in jail_names:
-                print("Destroying {}".format(jail_name))
-                #progress bar for jail destruction
+                click.echo(msg(PROG_NAME, 'info', 'cyan', "destroying {}".format(jail_name)))
                 try:
                     destroy_jail(jail_name)
-                except (InvalidJailName, CommandError) as err:
-                    sys.exit(err.message)
+                except (jd.InvalidJailName, jd.CommandError) as err:
+                    sys.exit(msg(PROG_NAME, 'error', 'red', err.message))
         else:
             confirm_individual_destruction(jail_names)
     else:
         confirm_individual_destruction(jail_names)
+
+
+def destroy_jail(jail_name):
+    """Destroys a jail.
+
+    Helper functions are called to destroy the jail. Assumes user is sure of destruction.
+
+    Args:
+        jail_name (str): the name of the jail that is to be destroyed
+
+    Returns:
+        None
+
+    Raises:
+        jailify.delete.InvalidJailName: If ``jail_name`` is empty this exception is raised.
+    """
+    if not jail_name:
+        raise jd.InvalidJailName("jail name cannot be empty")
+    else:
+        click.echo(msg(PROG_NAME, 'info', 'cyan', "stopping {} jail".format(jail_name)))
+        jd.stop_jail(jail_name)
+
+        click.echo(msg(PROG_NAME, 'info', 'cyan', "destroying {} dataset".format(jail_name)))
+        jd.zfs_destroy(jail_name)
+
+        click.echo(msg(PROG_NAME, 'info', 'cyan', "removing /etc/fstab.{}".format(jail_name)))
+        jd.remove_fstab(jail_name)
+
+        click.echo(msg(PROG_NAME, 'info', 'cyan', 'modifying /etc/jail.conf'))
+        jd.edit_jailconf_file(jail_name)
