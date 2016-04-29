@@ -14,10 +14,13 @@ import magic
 import tarfile
 import zipfile
 import os.path
+import tempfile
 import mimetypes
+import subprocess
+from subprocess import DEVNULL, CalledProcessError
 
 REQUIRED_KEYS = ("projectName","client","hostname","facultyContact","client","teamMembers")
-REQUIRED_USER_KEYS = ("username","publicKey","email","name")
+REQUIRED_USER_KEYS = ("username","email","name")
 
 class ExtractionError(Exception):
     """An exception that is raised when the file type is invalid.
@@ -39,6 +42,11 @@ class InvalidFileType(ExtractionError):
 
 class FailedToExtractFile(ExtractionError):
     """An exception that is raised when jailify fails to extract the given file."""
+    pass
+
+
+class ExtraneousPublicKey(ExtractionError):
+    """An exception that is raised when jailify finds more public keys than team members."""
     pass
 
 
@@ -79,7 +87,9 @@ def determine_file_type(file_name):
     else:
         magic_type = magic.from_file(file_name).decode('utf-8')
 
-        if magic_type[:5] == 'bzip2':
+        if magic_type == 'POSIX tar archive':
+            file_type = 'tar'
+        elif magic_type[:5] == 'bzip2':
             file_type = 'bz2'
         elif magic_type[:4] == 'gzip':
             file_type = 'gz'
@@ -88,98 +98,111 @@ def determine_file_type(file_name):
         elif magic_type[:2] == 'XZ':
             file_type = 'xz'
         else:
-            raise InvalidFileType("Error: {} is an invalid file type.".format(mime_type)) 
+            raise InvalidFileType("Error: {} is an invalid file type.".format(magic_type))
     return file_type
 
 
-## EXTRACT ##
-def extract(filetype, filename):
-    """Determines what type of extraction should be used on the file and calls
-       the appropriate extract function. Then returns the directory to be 
-       worked with.
-
-    Args:
-        filetype (str): the type of file. 'dir', 'zip', 'xz', 'bzip2' or 'gzip'
-        filename (str): the name of the file as provided from the command line.
-                        Includes file extension.
-    Returns:
-        mdata (dict): the dictionary containig all metadata
-    """
-    if filetype == "bz2" or filetype == "gz" or filetype == "xz":
-        mdata = extract_tar(filename, filetype)
-    elif filetype == "zip":
-        mdata = extract_zip(filename)
-    elif filetype == "dir":
-        mdata = extract_dir(filename)
-    else:
-        raise FailedToExtractFile("Error: Could not extract data from {}.".format(filename))    
-    return mdata
-
-
 ## EXTRACT_TAR ##
-def extract_tar(filenametar, comptype):
+def extract_tar(tar_path, comp_type):
     """Opens, extracts, and closes tar file that has been compressed with one
        of gzip, xz, and bzip2.
 
     Args:
-        filenametar (str): the name of the file as provided on the command
-                           line.
-        comptype    (str): the compression type (bzip2, gzip or xz) to be
+        tar_path (str): The path to the tar file.
+        comp_type    (str): the compression type (bzip2, gzip or xz) to be
                            passed in when decompressing.
+
     Returns:
-        metadata (dict): the json contents and public keys combined into a
-                         dictionary.
+        directory (str): The path to the extracted (or un-tarred)  directory.
     """
-    pub_keys = {}
+    temp_dir = tempfile.mkdtemp()
     try:
-        with tarfile.open(filenametar, 'r:{}'.format(comptype)) as tar:
-            for f in tar:
-                if os.path.basename(f.name) == "metadata.json":
-                    try:
-                        metadata = json.loads(bytes.decode(tar.extractfile(f).read()))
-                    except ValueError:
-                        raise InvalidJsonException("Error: Decoding JSON has failed")
-                elif os.path.basename(f.name).endswith('.pub'):
-                    username = os.path.splitext(os.path.basename(f.name))[0]
-                    key = bytes.decode(tar.extractfile(f).read())
-                    pub_keys[username] = key
-        
-        metadata = distribute(pub_keys,metadata)
-        return metadata
-    except tarfile.TarError:
-        raise FailedToExtractFile("Error: Failed to extract the tar file")
+        with tarfile.open(tar_path, 'r{}'.format(":" + comp_type if comp_type in ("bz2", "gz", "xz") else "")) as tf:
+            paths = []
+            for member in tf.getmembers():
+                paths.append(os.path.join(temp_dir, member.path))
+                tf.extract(member, path=temp_dir)
+            return os.path.dirname(paths[0])
+    except (FileNotFoundError, PermissionError, tarfile.TarError):
+        raise FailedToExtractFile("Error: {} does not exist, is not readable, or is malformed.".format(zip_path))
 
 
 ## EXTRACT_ZIP ##
-def extract_zip(zipfilename):
+def extract_zip(zip_path):
     """Opens, extracts, and closes zip files.
 
     Args:
-        zipfilename (str): the name of the file
+        zip_path (str): The path to the zip file.
+
     Returns:
-        metadata (dict): the json contents and public keys in a directory
-   """
-    pub_keys = {}
+        directory (str): The path to the unzipped directory.
+    """
+    temp_dir = tempfile.mkdtemp()
     try:
-        with zipfile.ZipFile(zipfilename) as myzip:
-            for n in myzip.namelist():
-                if os.path.basename(n) == "metadata.json":
-                    try:
-                        metadata = json.loads(bytes.decode(myzip.open(n).read()))
-                    except ValueError:
-                        raise InvalidJSONError("Error decoding json failed")
-                elif os.path.basename(n).endswith('.pub'):
-                    username = os.path.splitext(os.path.basename(n))[0]
-                    key = bytes.decode(myzip.open(n).read())
-                    pub_keys[username] = key
-        metadata = distribute(pub_keys, metadata)
-        return metadata
-    except zipfile.BadZipFile:
-        raise FailedToExtractFile("Error: Failed to extract the zip file")
+        with zipfile.ZipFile(zip_path, 'r') as zf:
+            valid_files = (n for n in zf.namelist() if n.endswith('.json') or n.endswith('.pub'))
+            paths = [zf.extract(m, path=temp_dir) for m in valid_files]
+            return os.path.dirname(paths[0])
+    except (FileNotFoundError, PermissionError, zipfile.BadZipFile, zipfile.LargeZipFile):
+        raise FailedToExtractFile("Error: {} does not exist, is not readable, or is malformed.".format(zip_path))
 
 
-## EXTRACT_DIR ##
-def extract_dir(directory):
+## VALIDATE ##
+def validate_metadata(metadata):
+    """
+    Validates the metadata by verifying that its keys match
+    ``jailify.extract.REQUIRED_KEYS``.
+
+    Args:
+        metadata (dict): metadata in dictionary form
+
+    Returns:
+        None
+    """
+    ## validate metadata ##
+    if all(key in metadata for key in REQUIRED_KEYS):
+        regex = re.compile('^(?![0-9]+$)(?!-)[a-zA-Z0-9-]{,63}(?<!-)$')
+        match = regex.match(metadata["hostname"])
+        if not match:
+            raise InvalidHostname("Error: Hostname Invalid")
+    else:
+        raise InvalidMetadata("Error: Metadata parameters are invalid")
+
+
+def validate_team_members(team_members):
+    """
+    Validates the team member dictionaries in a ``team_members`` list by
+    verifying that each team member's keys match
+    ``jailify.extract.REQUIRED_USER_KEYS``.
+
+    Args:
+        team_members (list): a list of team member dictionaries
+
+    Returns:
+        None
+    """
+    if team_members:
+        for member in team_members:
+            try:
+                if not (all(key in member for key in REQUIRED_USER_KEYS)):
+                    raise ValidationError("Error: Validation failed.")
+            except KeyError:
+                raise ValidationError("Error: Validation error - key error")
+    else:
+        raise ValidationError("Error: Team member list is empty.")
+
+
+def valid_ssh_key(path):
+    command = ('/usr/bin/ssh-keygen', '-lf', path)
+    try:
+        subprocess.run(command, stdout=DEVNULL, stderr=DEVNULL, check=True)
+        return True
+    except CalledProcessError:
+        return False
+
+
+## BUID_METADATA ##
+def build_metadata(directory):
     """Retrieves desired metadata and public keys from directory.
 
     Args:
@@ -187,75 +210,58 @@ def extract_dir(directory):
     Returns:
         metadata (dict): the json contents and public keys in a dictionary.
     """
-    pub_keys = {}
-    for subdir, dirs, files in os.walk(directory):
-        for file in files:
-            if os.path.basename(file) == "metadata.json":
-                with open(os.path.join(subdir,file), 'r') as meta:
-                    try:
-                        metadata = json.loads(meta.read())
-                    except ValueError:
-                        raise InvalidJSONError("Error: Could no decode JSON")
-            elif os.path.basename(file).endswith(".pub"):
-                username = os.path.splitext(file)[0]
-                with open(os.path.join(subdir, file), 'r') as key:
-                    pub_keys[username] = key.read()
-
-    if metadata:
-        metadata = distribute(pub_keys, metadata)
-        return metadata
-    else:
-        raise FailedToExtractFile("Error: metadata.json is not present")
-
-
-## DISTRIBUTE ##
-def distribute(pub_keys, metadata):
-    """"Takes the public keys contained in pub_keys and distributes them into
-         metadata dictionary for each user.
-
-    Args:
-        pub_keys (dict): the dictionary containing usernames and public keys.
-        metadata (dict): the dictionary containing the extracted metadata.
-    Returns:
-        metadata (dict): the same metadata as before, but with a new field for
-                         each user called "publicKey" & the corresponding key.
-    """
     try:
-        for k in pub_keys.keys():
-            for m in metadata["teamMembers"]:
-                if k == m["username"]:
-                    pub_keys[k] = pub_keys[k].strip()
-                    m["publicKey"] = pub_keys[k]
-        return metadata
-    except KeyError:
-        raise InvalidJSONError("Malformed JSON. Better check that out.")
+        with open(os.path.join(directory, "metadata.json"), "r") as f:
+            try:
+                metadata = json.load(f)
+            except ValueError:
+                raise InvalidJSONError("Error: Malformed metadata.json.")
+            # Validate top-level JSON. Let exceptions bubble up.
+            validate_metadata(metadata)
+
+            team_members = metadata['teamMembers']
+
+            # Validate team member fields. Let exceptions bubble up.
+            validate_team_members(team_members)
+
+            if len(os.listdir(directory)) != (len(team_members) + 1):
+                raise ExtraneousPublicKey("Error: Team members do not match public keys.")
+
+            for member in team_members:
+                username = member['username']
+                pub_path = os.path.join(directory, "{}.pub".format(username))
+                if valid_ssh_key(pub_path):
+                    try:
+                        with open(pub_path, "r") as pub_file:
+                            member['publicKey'] = pub_file.read().rstrip('\n')
+                    except FileNotFoundError:
+                        raise FailedToExtractFile("Error: Missing public key for {}.".format(username))
+                else:
+                    raise ValidationError("Error: SSH key is invalid for {}.".format(username))
+            return metadata
+    except FileNotFoundError:
+        raise FailedToExtractFile("Error: metadata.json does not exist.")
 
 
-## VALIDATE ##
-def validate(metadata):
-    """Validates the keys, hostname, and team member usernames of the metadata
-       dictionary. Relies on jailify.extract.REQUIRED_KEYS and
-       jailify.extract.REQUIRED_USER_KEYS.
+## GET_METADATA ##
+def get_metadata(file_type, filename):
+    """Determines what type of extraction should be used on the file and calls
+       the appropriate extract function. Then returns the directory to be
+       worked with.
 
     Args:
-        metadata (dict): metadata in dictionary form
+        file_type (str): the type of file. 'dir', 'zip', 'xz', 'bzip2' or 'gzip'
+        filename (str): the name of the file as provided from the command line.
+                        Includes file extension.
     Returns:
-        None
+        mdata (dict): the dictionary containig all metadata
     """
-    ## validate metadata ##
-    if all(k in metadata for k in REQUIRED_KEYS):
-        regex = re.compile('^(?![0-9]+$)(?!-)[a-zA-Z0-9-]{,63}(?<!-)$')
-        match = regex.match(metadata["hostname"])
-        if not match:
-            raise InvalidHostname("Error: Hostname Invalid");
+    if file_type in ("tar", "bz2", "gz", "xz"):
+        path = extract_tar(filename, file_type)
+    elif file_type == "zip":
+        path = extract_zip(filename)
+    elif file_type == "dir":
+        path = filename
     else:
-        raise InvalidMetadata("Error: Metadata parameters are invalid");
-    ## validate team members##
-    teamMembers = metadata["teamMembers"]
-    for member in teamMembers:
-        try:
-            if not (all(k in member for k in REQUIRED_USER_KEYS) and
-                member["username"] == member["publicKey"].split()[-1]):
-                raise ValidationError("Error: Validation Failed")
-        except KeyError:
-            raise ValidationError("Error: Validation Error - Key Error")
+        raise FailedToExtractFile("Error: Could not extract data from {}.".format(filename))
+    return build_metadata(path)
