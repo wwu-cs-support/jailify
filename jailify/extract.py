@@ -98,7 +98,7 @@ def determine_file_type(file_name):
         elif magic_type[:2] == 'XZ':
             file_type = 'xz'
         else:
-            raise InvalidFileType("Error: {} is an invalid file type.".format(magic_type))
+            raise InvalidFileType("{} is an invalid file type".format(magic_type))
     return file_type
 
 
@@ -124,7 +124,7 @@ def extract_tar(tar_path, comp_type):
                 tf.extract(member, path=temp_dir)
             return os.path.dirname(paths[0])
     except (FileNotFoundError, PermissionError, tarfile.TarError):
-        raise FailedToExtractFile("Error: {} does not exist, is not readable, or is malformed.".format(zip_path))
+        raise FailedToExtractFile("{} does not exist, is not readable, or is malformed".format(zip_path))
 
 
 ## EXTRACT_ZIP ##
@@ -144,7 +144,7 @@ def extract_zip(zip_path):
             paths = [zf.extract(m, path=temp_dir) for m in valid_files]
             return os.path.dirname(paths[0])
     except (FileNotFoundError, PermissionError, zipfile.BadZipFile, zipfile.LargeZipFile):
-        raise FailedToExtractFile("Error: {} does not exist, is not readable, or is malformed.".format(zip_path))
+        raise FailedToExtractFile("{} does not exist, is not readable, or is malformed".format(zip_path))
 
 
 ## VALIDATE ##
@@ -164,9 +164,9 @@ def validate_metadata(metadata):
         regex = re.compile('^(?![0-9]+$)(?!-)[a-zA-Z0-9-]{,63}(?<!-)$')
         match = regex.match(metadata["hostname"])
         if not match:
-            raise InvalidHostname("Error: Hostname Invalid")
+            raise InvalidHostname("invalid hostname")
     else:
-        raise InvalidMetadata("Error: Metadata parameters are invalid")
+        raise InvalidMetadata("invalid metadata")
 
 
 def validate_team_members(team_members):
@@ -185,11 +185,11 @@ def validate_team_members(team_members):
         for member in team_members:
             try:
                 if not (all(key in member for key in REQUIRED_USER_KEYS)):
-                    raise ValidationError("Error: Validation failed.")
+                    raise ValidationError("team member validation failed")
             except KeyError:
-                raise ValidationError("Error: Validation error - key error")
+                raise ValidationError("key error in team member validation")
     else:
-        raise ValidationError("Error: Team member list is empty.")
+        raise ValidationError("team member list is empty")
 
 
 def valid_ssh_key(path):
@@ -215,7 +215,7 @@ def build_metadata(directory):
             try:
                 metadata = json.load(f)
             except ValueError:
-                raise InvalidJSONError("Error: Malformed metadata.json.")
+                raise InvalidJSONError("malformed metadata.json")
             # Validate top-level JSON. Let exceptions bubble up.
             validate_metadata(metadata)
 
@@ -225,7 +225,7 @@ def build_metadata(directory):
             validate_team_members(team_members)
 
             if len(os.listdir(directory)) != (len(team_members) + 1):
-                raise ExtraneousPublicKey("Error: Team members do not match public keys.")
+                raise ExtraneousPublicKey("team members do not match public keys")
 
             for member in team_members:
                 username = member['username']
@@ -235,12 +235,12 @@ def build_metadata(directory):
                         with open(pub_path, "r") as pub_file:
                             member['publicKey'] = pub_file.read().rstrip('\n')
                     except FileNotFoundError:
-                        raise FailedToExtractFile("Error: Missing public key for {}.".format(username))
+                        raise FailedToExtractFile("missing public key for {}".format(username))
                 else:
-                    raise ValidationError("Error: SSH key is invalid for {}.".format(username))
+                    raise ValidationError("invalid SSH key for {}".format(username))
             return metadata
     except FileNotFoundError:
-        raise FailedToExtractFile("Error: metadata.json does not exist.")
+        raise FailedToExtractFile("metadata.json does not exist")
 
 
 ## GET_METADATA ##
@@ -263,5 +263,5 @@ def get_metadata(file_type, filename):
     elif file_type == "dir":
         path = filename
     else:
-        raise FailedToExtractFile("Error: Could not extract data from {}.".format(filename))
+        raise FailedToExtractFile("could not extract data from {}".format(filename))
     return build_metadata(path)

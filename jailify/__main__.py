@@ -17,7 +17,8 @@ def root_check(func):
     @functools.wraps(func)
     def _wrapper(*args, **kwargs):
         if os.geteuid() != 0:
-            sys.exit("{}: error: must be ran as root".format(PROG_NAME))
+            msg = "{}: {}: must be run as root".format(PROG_NAME, click.style('error', fg='red'))
+            sys.exit(msg)
         else:
             func(*args, **kwargs)
     return _wrapper
@@ -32,14 +33,20 @@ def jailify_main(jail_directory):
     try:
         file_type = je.determine_file_type(jail_directory)
     except je.InvalidFileType as err:
-        sys.exit(err.message)
+        msg = "{}: {}: {}".format(PROG_NAME,
+                                  click.style('error', fg='red'),
+                                  err.message)
+        sys.exit(msg)
 
     try:
         metadata = je.get_metadata(file_type, jail_directory)
     except (je.FailedToExtractFile, je.ExtraneousPublicKey, 
             je.InvalidJSONError, je.ValidationError, je.InvalidHostname,
             je.InvalidMetadata, je.InvalidFileType) as err:
-        sys.exit(err.message)
+        msg = "{}: {}: {}".format(PROG_NAME,
+                                  click.style('error', fg='red'),
+                                  err.message)
+        sys.exit(msg)
 
     jail_name = metadata["hostname"].replace('-', '_')
    
