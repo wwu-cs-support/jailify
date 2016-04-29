@@ -23,7 +23,9 @@ def do_command(command):
         None
     """
     try:
-        subprocess.check_call(command)
+        subprocess.run(command,
+                       stdout=subprocess.DEVNULL,
+                       check=True)
     except subprocess.CalledProcessError as e:
         raise CommandError(e.output)
 
@@ -38,7 +40,10 @@ def do_command_with_return(command):
                      the command executed would be.
     """
     try:
-        result = bytes.decode(subprocess.check_output(command))
+        proc = subprocess.run(command,
+                              stdout=subprocess.PIPE,
+                              check=True)
+        result = bytes.decode(proc.stdout)
     except subprocess.CalledProcessError as e:
         raise CommandError(e.output)
     return result

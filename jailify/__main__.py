@@ -47,11 +47,11 @@ def jailify_main(jail_directory):
                                   err.message)
         sys.exit(msg)
 
-    hostname = metadata['hostname']
+    jail_name = metadata['hostname']
+    jail_name = jail_name.replace('-', '_')
     click.echo("{}: {}: creating {} jail".format(PROG_NAME,
                                                  click.style('info', fg='cyan'),
-                                                 hostname))
-    jail_name = hostname.replace('-', '_')
+                                                 jail_name))
 
     try:
         lowest_ip = jc.get_lowest_ip()
@@ -67,6 +67,7 @@ def jailify_main(jail_directory):
             click.echo("{}: {}: cloning base jail at snapshot {}".format(PROG_NAME, click.style('info', fg='cyan'), snapshot))
             jc.clone_base_jail(snapshot, jail_name)
 
+            click.echo("{}: {}: starting {} jail".format(PROG_NAME, click.style('info', fg='cyan'), jail_name))
             jc.start_jail(jail_name)
         else:
             raise jc.InvalidJailNameError("jail {} already exists".format(jail_name))
