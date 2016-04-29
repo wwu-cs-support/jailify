@@ -238,6 +238,10 @@ def build_metadata(directory):
                         raise FailedToExtractFile("missing public key for {}".format(username))
                 else:
                     raise ValidationError("invalid SSH key for {}".format(username))
+
+                if 'PRIVATE KEY' in member['publicKey']:
+                    raise ValidationError("found private key for {} (╯°□°）╯︵ ┻━┻".format(username))
+
             return metadata
     except FileNotFoundError:
         raise FailedToExtractFile("metadata.json does not exist")
