@@ -87,10 +87,26 @@ def jailify_main(jail_directory):
         user_keys.append(user['publicKey'])
 
     try:
-        ju.create_users(jail_name, usernames, usernames, user_gecos, user_keys)
-    except (ju.SSHKeyError, ju.SendMailError, CommandError) as err:
-        sys.exit(err.message)
+        user_data = zip(usernames, usernames, user_gecos, user_keys)
+        for user, group, gecos, key in user_data:
+            click.echo("{}: {}: adding group {}".format(PROG_NAME, click.style('info', fg='cyan'), group))
+            ju.add_group(jail_name, group)
 
+            click.echo("{}: {}: adding user {}".format(PROG_NAME, click.style('info', fg='cyan'), user))
+            ju.add_user(jail_name, user, group, gecos)
+
+            click.echo("{}: {}: setting password expiration for {}".format(PROG_NAME, click.style('info', fg='cyan'), user))
+            ju.set_password_expiration(jail_name, user)
+
+            click.echo("{}: {}: placing SSH key for {}".format(PROG_NAME, click.style('info', fg='cyan'), user))
+            ju.add_key(jail_name, user, key)
+    except (ju.SSHKeyError, ju.SendMailError, CommandError) as err:
+        msg = "{}: {}: {}".format(PROG_NAME,
+                                  click.style('error', fg='red'),
+                                  err.message)
+        sys.exit(msg)
+
+    click.echo("{}: {}: creating fallback snapshot".format(PROG_NAME, click.style('info', fg='cyan')))
     create_snapshot(jail_name)
 
 @root_check
