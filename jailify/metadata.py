@@ -230,17 +230,19 @@ def build_metadata(directory):
             for member in team_members:
                 username = member['username']
                 pub_path = os.path.join(directory, "{}.pub".format(username))
-                if valid_ssh_key(pub_path):
-                    try:
-                        with open(pub_path, "r") as pub_file:
-                            member['publicKey'] = pub_file.read().rstrip('\n')
-                    except FileNotFoundError:
-                        raise FailedToExtractFile("missing public key for {}".format(username))
-                else:
-                    raise ValidationError("invalid SSH key for {}".format(username))
 
-                if 'PRIVATE KEY' in member['publicKey']:
-                    raise ValidationError("found private key for {} (╯°□°）╯︵ ┻━┻".format(username))
+                try:
+                    # Reading in the key before validating it allows us to find out if it's a private key.
+                    with open(pub_path, 'r') as pub_file:
+                        member['publicKey'] = pub_file.read().rstrip('\n')
+
+                        if 'PRIVATE KEY' in member['publicKey']:
+                            raise ValidationError("found private key for {} (╯°□°）╯︵ ┻━┻".format(username))
+                except FileNotFoundError:
+                    raise FailedToExtractFile("missing public key for {}".format(username))
+
+                if not valid_ssh_key(pub_path):
+                    raise ValidationError("invalid SSH key for {}".format(username))
 
             return metadata
     except FileNotFoundError:
