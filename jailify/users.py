@@ -137,6 +137,6 @@ def add_key(jail, user, key, jail_root="/usr/jail/", home_dir="usr/home/",
     if os.path.isfile(path_to_file):
         with open(path_to_file, "a") as f:
             if f.write(key) <= 0:
-                raise SSHKeyError("jailify: error: Could not write to authorized_keys file.")
+                raise SSHKeyError("could not write to ~{}/.ssh/authorized_keys".format(user))
     else:
-        raise SSHKeyError("jailify: error: The file {} does not exist.".format(path_to_file))
+        raise SSHKeyError("file {} does not exist".format(path_to_file))
