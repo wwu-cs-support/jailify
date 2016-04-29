@@ -1,6 +1,8 @@
 import sys
 import subprocess
 
+from click import style
+
 class CommandError(Exception):
     """An exception that is raised when subprocess fails.
 
@@ -12,6 +14,11 @@ class CommandError(Exception):
     """
     def __init__(self, message):
         self.message = message
+
+
+def msg(prog_name, msg_type, color, msg):
+    return "{}: {}: {}".format(prog_name, style(msg_type, color), msg)
+
 
 def do_command(command):
     """Executes command and error handles when applicable.

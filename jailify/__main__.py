@@ -7,7 +7,7 @@ import jailify.users as ju
 import jailify.extract as je
 import jailify.creation as jc
 
-from jailify.util import create_snapshot, CommandError
+from jailify.util import msg, create_snapshot, CommandError
 from jailify.delete import destroy_jail, InvalidJailName
 
 
@@ -17,8 +17,7 @@ def root_check(func):
     @functools.wraps(func)
     def _wrapper(*args, **kwargs):
         if os.geteuid() != 0:
-            msg = "{}: {}: must be run as root".format(PROG_NAME, click.style('error', fg='red'))
-            sys.exit(msg)
+            sys.exit(msg(PROG_NAME, 'error', 'red', 'must be run as root'))
         else:
             func(*args, **kwargs)
     return _wrapper
@@ -32,50 +31,39 @@ def jailify_main(jail_directory):
     try:
         file_type = je.determine_file_type(jail_directory)
     except je.InvalidFileType as err:
-        msg = "{}: {}: {}".format(PROG_NAME,
-                                  click.style('error', fg='red'),
-                                  err.message)
-        sys.exit(msg)
+        sys.exit(msg(PROG_NAME, 'error', 'red', err.message))
 
     try:
         metadata = je.get_metadata(file_type, jail_directory)
     except (je.FailedToExtractFile, je.ExtraneousPublicKey, 
             je.InvalidJSONError, je.ValidationError, je.InvalidHostname,
             je.InvalidMetadata, je.InvalidFileType) as err:
-        msg = "{}: {}: {}".format(PROG_NAME,
-                                  click.style('error', fg='red'),
-                                  err.message)
-        sys.exit(msg)
+        sys.exit(msg(PROG_NAME, 'error', 'red', err.message))
 
     jail_name = metadata['hostname']
     jail_name = jail_name.replace('-', '_')
-    click.echo("{}: {}: creating {} jail".format(PROG_NAME,
-                                                 click.style('info', fg='cyan'),
-                                                 jail_name))
+    click.echo(msg(PROG_NAME, 'info', 'cyan', "creating {} jail".format(jail_name)))
 
     try:
         lowest_ip = jc.get_lowest_ip()
         interface = jc.get_interface()
         snapshot = jc.get_latest_snapshot()
         if jc.check_name(jail_name):
-            click.echo("{}: {}: adding entry to /etc/jail.conf".format(PROG_NAME, click.style('info', fg='cyan')))
+            click.echo(msg(PROG_NAME, 'info', 'cyan', 'adding entry to /etc/jail.conf'))
             jc.add_entry(lowest_ip, jail_name, interface)
 
-            click.echo("{}: {}: creating /etc/fstab.{}".format(PROG_NAME, click.style('info', fg='cyan'), jail_name))
+            click.echo(msg(PROG_NAME, 'info', 'cyan', "creating /etc/fstab.{}".format(jail_name)))
             jc.create_fstab_file(jail_name)
 
-            click.echo("{}: {}: cloning base jail at snapshot {}".format(PROG_NAME, click.style('info', fg='cyan'), snapshot))
+            click.echo(msg(PROG_NAME, 'info', 'cyan', "cloning base jail at snapshot {}".format(snapshot)))
             jc.clone_base_jail(snapshot, jail_name)
 
-            click.echo("{}: {}: starting {} jail".format(PROG_NAME, click.style('info', fg='cyan'), jail_name))
+            click.echo(msg(PROG_NAME, 'info', 'cyan', "starting {} jail".format(jail_name)))
             jc.start_jail(jail_name)
         else:
             raise jc.InvalidJailNameError("jail {} already exists".format(jail_name))
     except (jc.InvalidJailNameError, jc.RegularExpressionError, CommandError) as err:
-        msg = "{}: {}: {}".format(PROG_NAME,
-                                  click.style('error', fg='red'),
-                                  err.message)
-        sys.exit(msg)
+        sys.exit(msg(PROG_NAME, 'error', 'red', err.message))
    
     usernames = []
     user_gecos = []
@@ -89,24 +77,21 @@ def jailify_main(jail_directory):
     try:
         user_data = zip(usernames, usernames, user_gecos, user_keys)
         for user, group, gecos, key in user_data:
-            click.echo("{}: {}: adding group {}".format(PROG_NAME, click.style('info', fg='cyan'), group))
+            click.echo(msg(PROG_NAME, 'info', 'cyan', "adding group {}".format(group)))
             ju.add_group(jail_name, group)
 
-            click.echo("{}: {}: adding user {}".format(PROG_NAME, click.style('info', fg='cyan'), user))
+            click.echo(msg(PROG_NAME, 'info', 'cyan', "adding user {}".format(user)))
             ju.add_user(jail_name, user, group, gecos)
 
-            click.echo("{}: {}: setting password expiration for {}".format(PROG_NAME, click.style('info', fg='cyan'), user))
+            click.echo(msg(PROG_NAME, 'info', 'cyan', "setting password expiration for {}".format(user)))
             ju.set_password_expiration(jail_name, user)
 
-            click.echo("{}: {}: placing SSH key for {}".format(PROG_NAME, click.style('info', fg='cyan'), user))
+            click.echo(msg(PROG_NAME, 'info', 'cyan', "placing SSH key for {}".format(user)))
             ju.add_key(jail_name, user, key)
     except (ju.SSHKeyError, ju.SendMailError, CommandError) as err:
-        msg = "{}: {}: {}".format(PROG_NAME,
-                                  click.style('error', fg='red'),
-                                  err.message)
-        sys.exit(msg)
+        sys.exit(msg(PROG_NAME, 'error', 'red', err.message))
 
-    click.echo("{}: {}: creating fallback snapshot".format(PROG_NAME, click.style('info', fg='cyan')))
+    click.echo(msg(PROG_NAME, 'info', 'cyan', "creating fallback snapshot".format(user)))
     create_snapshot(jail_name)
 
 @root_check
