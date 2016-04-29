@@ -4,7 +4,7 @@ import sys
 import click
 import functools
 import jailify.users as ju
-import jailify.delete as jd
+import jailify.deletion as jd
 import jailify.extract as je
 import jailify.creation as jc
 
@@ -222,7 +222,7 @@ def destroy_jail(jail_name):
         None
 
     Raises:
-        jailify.delete.InvalidJailName: If ``jail_name`` is empty this exception is raised.
+        jailify.deletion.InvalidJailName: If ``jail_name`` is empty this exception is raised.
     """
     if not jail_name:
         raise jd.InvalidJailName("jail name cannot be empty")
