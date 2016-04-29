@@ -5,7 +5,7 @@ import click
 import functools
 import jailify.users as ju
 import jailify.deletion as jd
-import jailify.extract as je
+import jailify.metadata as jm
 import jailify.creation as jc
 
 from jailify.util import msg, create_snapshot, CommandError
@@ -29,15 +29,15 @@ def root_check(func):
 def jailify_main(jail_directory):
 
     try:
-        file_type = je.determine_file_type(jail_directory)
-    except je.InvalidFileType as err:
+        file_type = jm.determine_file_type(jail_directory)
+    except jm.InvalidFileType as err:
         sys.exit(msg(PROG_NAME, 'error', 'red', err.message))
 
     try:
-        metadata = je.get_metadata(file_type, jail_directory)
-    except (je.FailedToExtractFile, je.ExtraneousPublicKey, 
-            je.InvalidJSONError, je.ValidationError, je.InvalidHostname,
-            je.InvalidMetadata, je.InvalidFileType) as err:
+        metadata = jm.get_metadata(file_type, jail_directory)
+    except (jm.FailedToExtractFile, jm.ExtraneousPublicKey, 
+            jm.InvalidJSONError, jm.ValidationError, jm.InvalidHostname,
+            jm.InvalidMetadata, jm.InvalidFileType) as err:
         sys.exit(msg(PROG_NAME, 'error', 'red', err.message))
 
     jail_name = metadata['hostname']
