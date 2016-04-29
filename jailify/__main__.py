@@ -151,7 +151,7 @@ def destroy_jail_prompt(jail_name, abort_output=True):
     else:
         destroy = click.confirm(msg(PROG_NAME, 'prompt', 'magenta', "destroy {}?".format(jail_name)), default=False)
         if destroy:
-            confirm_destroy = click.confirm(msg(PROG_NAME, 'WARNING', 'yellow', "this will destroy ALL jail data for {}".format(jail_name)), default=False)
+            confirm_destroy = click.confirm(msg(PROG_NAME, 'warning', 'yellow', "this will destroy ALL jail data for {}".format(jail_name)), default=False)
             if confirm_destroy:
                 click.echo(msg(PROG_NAME, 'info', 'cyan', "destroying {}".format(jail_name)))
                 try:
@@ -196,7 +196,7 @@ def destroy_all_jails_prompt(jail_names):
         click.echo("    - {:^10}".format(jail_name))
     destroy = click.confirm(msg(PROG_NAME, 'prompt', 'magenta', 'destroy all of them?'), default=False)
     if destroy:
-        all_destroy = click.confirm(msg(PROG_NAME, 'WARNING', 'yellow', 'this will destroy ALL data for the above jails. are you sure?'), default=False)
+        all_destroy = click.confirm(msg(PROG_NAME, 'warning', 'yellow', 'this will destroy ALL data for the above jails. are you sure?'), default=False)
         if all_destroy:
             for jail_name in jail_names:
                 click.echo(msg(PROG_NAME, 'info', 'cyan', "destroying {}".format(jail_name)))
