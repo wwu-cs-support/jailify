@@ -54,7 +54,22 @@ def jailify_main(jail_directory):
     jail_name = hostname.replace('-', '_')
 
     try:
-        jc.create_jail(jail_name)
+        lowest_ip = jc.get_lowest_ip()
+        interface = jc.get_interface()
+        snapshot = jc.get_latest_snapshot()
+        if jc.check_name(jail_name):
+            click.echo("{}: {}: adding entry to /etc/jail.conf".format(PROG_NAME, click.style('info', fg='cyan')))
+            jc.add_entry(lowest_ip, jail_name, interface)
+
+            click.echo("{}: {}: creating /etc/fstab.{}".format(PROG_NAME, click.style('info', fg='cyan'), jail_name))
+            jc.create_fstab_file(jail_name)
+
+            click.echo("{}: {}: cloning base jail at snapshot {}".format(PROG_NAME, click.style('info', fg='cyan'), snapshot))
+            jc.clone_base_jail(snapshot, jail_name)
+
+            jc.start_jail(jail_name)
+        else:
+            raise jc.InvalidJailNameError("jail {} already exists".format(jail_name))
     except (jc.InvalidJailNameError, jc.RegularExpressionError, CommandError) as err:
         msg = "{}: {}: {}".format(PROG_NAME,
                                   click.style('error', fg='red'),
