@@ -47,7 +47,7 @@ def get_interface():
     if(len(interfaces) == 1):
         return interfaces[0]
     else:
-        raise RegularExpressionError("Error: Multiple interfaces detected. Aborting due to ambiguity.")
+        raise RegularExpressionError("multiple interfaces detected. aborting due to inability to read minds. ¯\_(ツ)_/¯")
 
 def check_name(jail_name):
     """Checks the desired jail name for availability.
@@ -88,7 +88,7 @@ def get_latest_snapshot():
 
     snapshot_list = re.findall('(?<=.base10.2x64@)\S*', str(zfs_output))
     if not snapshot_list:
-        raise RegularExpressionError("Error: No snapshots have been found.")
+        raise RegularExpressionError("no snapshots found")
     else:
         return snapshot_list[-1]
 
@@ -121,7 +121,7 @@ def get_lowest_ip():
     for ip in ip_network:
         if not (str(ip) in ip_addrs):
             return str(ip)
-    raise ValueError('No ip addresses available in range {}'.format(ip_range))
+    raise ValueError('no ip addresses available in range {}'.format(ip_range))
 
 def add_entry(ip_addr, jail_name, interface):
     """Opens /etc/jail.conf and appends the file to include an entry for the new jail.
@@ -207,4 +207,4 @@ def create_jail(jail_name):
         clone_base_jail(snapshot, jail_name)
         start_jail(jail_name)
     else:
-        raise InvalidJailNameError("Error: {} Jail name already exists".format(jail_name))
+        raise InvalidJailNameError("jail {} already exists".format(jail_name))

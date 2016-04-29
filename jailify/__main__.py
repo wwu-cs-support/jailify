@@ -28,7 +28,6 @@ def root_check(func):
 @click.command()
 @click.argument('jail_directory', type=click.Path(exists=True, readable=True))
 def jailify_main(jail_directory):
-    print("Creating jail: {}.***REMOVED***".format(jail_directory.split(".")[0]))
 
     try:
         file_type = je.determine_file_type(jail_directory)
@@ -48,7 +47,19 @@ def jailify_main(jail_directory):
                                   err.message)
         sys.exit(msg)
 
-    jail_name = metadata["hostname"].replace('-', '_')
+    hostname = metadata['hostname']
+    click.echo("{}: {}: creating {} jail".format(PROG_NAME,
+                                                 click.style('info', fg='cyan'),
+                                                 hostname))
+    jail_name = hostname.replace('-', '_')
+
+    try:
+        jc.create_jail(jail_name)
+    except (jc.InvalidJailNameError, jc.RegularExpressionError, CommandError) as err:
+        msg = "{}: {}: {}".format(PROG_NAME,
+                                  click.style('error', fg='red'),
+                                  err.message)
+        sys.exit(msg)
    
     usernames = []
     user_gecos = []
@@ -58,11 +69,6 @@ def jailify_main(jail_directory):
         usernames.append(user['username'])
         user_gecos.append(user['name'])
         user_keys.append(user['publicKey'])
-
-    try:
-        jc.create_jail(jail_name)
-    except (jc.InvalidJailNameError, jc.RegularExpressionError, CommandError) as err:
-        sys.exit(err.message)
 
     try:
         ju.create_users(jail_name, usernames, usernames, user_gecos, user_keys)
