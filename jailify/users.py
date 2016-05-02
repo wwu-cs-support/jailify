@@ -118,7 +118,6 @@ def send_msg(jail, user, body, subject="Welcome"):
     except Exception as e:
         raise SendMailError(e.output)
     process.communicate(bytes(body, 'UTF-8'))
-    print("Sent mail to {}.".format(user))
 
 
 def add_key(jail, user, key, jail_root="/usr/jail/", home_dir="usr/home/",
@@ -138,30 +137,6 @@ def add_key(jail, user, key, jail_root="/usr/jail/", home_dir="usr/home/",
     if os.path.isfile(path_to_file):
         with open(path_to_file, "a") as f:
             if f.write(key) <= 0:
-                raise SSHKeyError("jailify: error: Could not write to authorized_keys file.")
+                raise SSHKeyError("could not write to ~{}/.ssh/authorized_keys".format(user))
     else:
-        raise SSHKeyError("jailify: error: The file {} does not exist.".format(path_to_file))
-
-
-def create_users(jail, user_groups, user_names, user_gecos, user_keys):
-    """Creates user accounts and places a users ssh key into their authorized_keys file
-
-    Args:
-        jail (str): Current jail name we are working with.
-        user_groups (list): Each entry corresponds to a goup a user will be added to.
-        user_names (list): List of user names of accounts to be created.
-        user_gecos (list): Each entry corresponds to a users gecos information.
-        user_keys (list): Each entry corresponds to a users public ssh key.
-
-    Returns:
-        None
-    """
-    for user, group, gecos, key  in zip(user_names, user_groups, user_gecos, user_keys):
-        print("Adding {} as a group.".format(group))
-        add_group(jail, group)
-        print("Adding {} as a user.".format(user))
-        add_user(jail, user, group, gecos)
-        print("Setting password expiration date for {}".format(user))
-        set_password_expiration(jail, user)
-        print("Placing ssh-keys for {}".format(user))
-        add_key(jail, user, key)
+        raise SSHKeyError("file {} does not exist".format(path_to_file))

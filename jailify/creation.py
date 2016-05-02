@@ -47,7 +47,7 @@ def get_interface():
     if(len(interfaces) == 1):
         return interfaces[0]
     else:
-        raise RegularExpressionError("Error: Multiple interfaces detected. Aborting due to ambiguity.")
+        raise RegularExpressionError("multiple interfaces detected. aborting due to inability to read minds. ¯\_(ツ)_/¯")
 
 def check_name(jail_name):
     """Checks the desired jail name for availability.
@@ -88,7 +88,7 @@ def get_latest_snapshot():
 
     snapshot_list = re.findall('(?<=.base10.2x64@)\S*', str(zfs_output))
     if not snapshot_list:
-        raise RegularExpressionError("Error: No snapshots have been found.")
+        raise RegularExpressionError("no snapshots found")
     else:
         return snapshot_list[-1]
 
@@ -121,7 +121,7 @@ def get_lowest_ip():
     for ip in ip_network:
         if not (str(ip) in ip_addrs):
             return str(ip)
-    raise ValueError('No ip addresses available in range {}'.format(ip_range))
+    raise ValueError('no ip addresses available in range {}'.format(ip_range))
 
 def add_entry(ip_addr, jail_name, interface):
     """Opens /etc/jail.conf and appends the file to include an entry for the new jail.
@@ -134,7 +134,6 @@ def add_entry(ip_addr, jail_name, interface):
     Returns:
         None
     """
-    print("Adding entry to /etc/jail.conf")
     with open('/etc/jail.conf', 'a') as jail_file:
         jail_desc = ('\n\n{} {{\n'
                      '    interface = {};\n'
@@ -152,7 +151,6 @@ def create_fstab_file(jail_name):
     Returns:
         None
     """
-    print("Creating fstab file")
     path = "/etc/fstab."
     fstab_path = path + jail_name
     fstab_file = open(fstab_path, 'w')
@@ -175,7 +173,6 @@ def clone_base_jail(snapshot, jail_name):
 
     cmd = ["zfs", "clone", snapshot_path, jail_path]
     do_command(cmd)
-    print("Success cloning base jail")
 
 def start_jail(jail_name):
     """Starts jail by running 'service jail start jail_name' where jail_name is an argument.
@@ -188,23 +185,3 @@ def start_jail(jail_name):
     """
     cmd = ["service", "jail", "start", jail_name]
     do_command(cmd)
-
-def create_jail(jail_name):
-    """Creates a jail by calling helper functions.
-
-    Args:
-        jail_name (str): the name for the jail that is being created.
-
-    Returns:
-        None
-    """
-    lowest_ip = get_lowest_ip()
-    interface = get_interface()
-    snapshot = get_latest_snapshot()
-    if check_name(jail_name):
-        add_entry(lowest_ip, jail_name, interface)
-        create_fstab_file(jail_name)
-        clone_base_jail(snapshot, jail_name)
-        start_jail(jail_name)
-    else:
-        raise InvalidJailNameError("Error: {} Jail name already exists".format(jail_name))

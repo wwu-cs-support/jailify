@@ -4,11 +4,11 @@ import sys
 import click
 import functools
 import jailify.users as ju
-import jailify.extract as je
+import jailify.deletion as jd
+import jailify.metadata as jm
 import jailify.creation as jc
 
-from jailify.util import create_snapshot, CommandError
-from jailify.delete import destroy_jail, InvalidJailName
+from jailify.util import msg, create_snapshot, CommandError
 
 
 PROG_NAME = os.path.basename(sys.argv and sys.argv[0] or __file__)
@@ -17,7 +17,7 @@ def root_check(func):
     @functools.wraps(func)
     def _wrapper(*args, **kwargs):
         if os.geteuid() != 0:
-            sys.exit("{}: error: must be ran as root".format(PROG_NAME))
+            sys.exit(msg(PROG_NAME, 'error', 'red', 'must be run as root'))
         else:
             func(*args, **kwargs)
     return _wrapper
@@ -27,21 +27,43 @@ def root_check(func):
 @click.command()
 @click.argument('jail_directory', type=click.Path(exists=True, readable=True))
 def jailify_main(jail_directory):
-    print("Creating jail: {}.***REMOVED***".format(jail_directory.split(".")[0]))
 
     try:
-        file_type = je.determine_file_type(jail_directory)
-    except je.InvalidFileType as err:
-        sys.exit(err.message)
+        file_type = jm.determine_file_type(jail_directory)
+    except jm.InvalidFileType as err:
+        sys.exit(msg(PROG_NAME, 'error', 'red', err.message))
 
     try:
-        metadata = je.get_metadata(file_type, jail_directory)
-    except (je.FailedToExtractFile, je.ExtraneousPublicKey, 
-            je.InvalidJSONError, je.ValidationError, je.InvalidHostname,
-            je.InvalidMetadata, je.InvalidFileType) as err:
-        sys.exit(err.message)
+        metadata = jm.get_metadata(file_type, jail_directory)
+    except (jm.FailedToExtractFile, jm.ExtraneousPublicKey, 
+            jm.InvalidJSONError, jm.ValidationError, jm.InvalidHostname,
+            jm.InvalidMetadata, jm.InvalidFileType) as err:
+        sys.exit(msg(PROG_NAME, 'error', 'red', err.message))
 
-    jail_name = metadata["hostname"].replace('-', '_')
+    jail_name = metadata['hostname']
+    jail_name = jail_name.replace('-', '_')
+    click.echo(msg(PROG_NAME, 'info', 'cyan', "creating {} jail".format(jail_name)))
+
+    try:
+        lowest_ip = jc.get_lowest_ip()
+        interface = jc.get_interface()
+        snapshot = jc.get_latest_snapshot()
+        if jc.check_name(jail_name):
+            click.echo(msg(PROG_NAME, 'info', 'cyan', 'adding entry to /etc/jail.conf'))
+            jc.add_entry(lowest_ip, jail_name, interface)
+
+            click.echo(msg(PROG_NAME, 'info', 'cyan', "creating /etc/fstab.{}".format(jail_name)))
+            jc.create_fstab_file(jail_name)
+
+            click.echo(msg(PROG_NAME, 'info', 'cyan', "cloning base jail at snapshot {}".format(snapshot)))
+            jc.clone_base_jail(snapshot, jail_name)
+
+            click.echo(msg(PROG_NAME, 'info', 'cyan', "starting {} jail".format(jail_name)))
+            jc.start_jail(jail_name)
+        else:
+            raise jc.InvalidJailNameError("jail {} already exists".format(jail_name))
+    except (jc.InvalidJailNameError, jc.RegularExpressionError, CommandError) as err:
+        sys.exit(msg(PROG_NAME, 'error', 'red', err.message))
    
     usernames = []
     user_gecos = []
@@ -53,15 +75,23 @@ def jailify_main(jail_directory):
         user_keys.append(user['publicKey'])
 
     try:
-        jc.create_jail(jail_name)
-    except (jc.InvalidJailNameError, jc.RegularExpressionError, CommandError) as err:
-        sys.exit(err.message)
+        user_data = zip(usernames, usernames, user_gecos, user_keys)
+        for user, group, gecos, key in user_data:
+            click.echo(msg(PROG_NAME, 'info', 'cyan', "adding group {}".format(group)))
+            ju.add_group(jail_name, group)
 
-    try:
-        ju.create_users(jail_name, usernames, usernames, user_gecos, user_keys)
+            click.echo(msg(PROG_NAME, 'info', 'cyan', "adding user {}".format(user)))
+            ju.add_user(jail_name, user, group, gecos)
+
+            click.echo(msg(PROG_NAME, 'info', 'cyan', "setting password expiration for {}".format(user)))
+            ju.set_password_expiration(jail_name, user)
+
+            click.echo(msg(PROG_NAME, 'info', 'cyan', "placing SSH key for {}".format(user)))
+            ju.add_key(jail_name, user, key)
     except (ju.SSHKeyError, ju.SendMailError, CommandError) as err:
-        sys.exit(err.message)
+        sys.exit(msg(PROG_NAME, 'error', 'red', err.message))
 
+    click.echo(msg(PROG_NAME, 'info', 'cyan', "creating fallback snapshot".format(user)))
     create_snapshot(jail_name)
 
 @root_check
@@ -117,24 +147,22 @@ def destroy_jail_prompt(jail_name, abort_output=True):
         None
     """
     if jail_name is None:
-        sys.exit("{}: error: The jail specified cannot be found".format(PROG_NAME))
+        sys.exit(msg(PROG_NAME, 'error', 'red', 'the specified jail cannot be found'))
     else:
-        destroy = click.confirm("Destroy {}.***REMOVED***?".format(jail_name), default=False)
+        destroy = click.confirm(msg(PROG_NAME, 'prompt', 'magenta', "destroy {}?".format(jail_name)), default=False)
         if destroy:
-            confirm_destroy = click.confirm(("[WARNING]: This will destroy ALL jail data for "
-                    "{}.***REMOVED***. ARE you sure?".format(jail_name)), default=False)
+            confirm_destroy = click.confirm(msg(PROG_NAME, 'warning', 'yellow', "this will destroy ALL jail data for {}".format(jail_name)), default=False)
             if confirm_destroy:
-                print("destroying {} ...........".format(jail_name))
-                #Progress bar for destruction.
+                click.echo(msg(PROG_NAME, 'info', 'cyan', "destroying {}".format(jail_name)))
                 try:
                     destroy_jail(jail_name)
-                except (InvalidJailName, CommandError) as err:
-                    sys.exit(err.message)
+                except (jd.InvalidJailName, jd.CommandError) as err:
+                    sys.exit(msg(PROG_NAME, 'error', 'red', err.message))
             if abort_output:
-                sys.exit("{}: info: Destruction of {} was aborted.".format(PROG_NAME, jail_name))
+                sys.exit(msg(PROG_NAME, 'info', 'cyan', "aborted destruction of {}".format(jail_name)))
         else:
             if abort_output:
-                sys.exit("{}: info: Destruction of {} was aborted.".format(PROG_NAME, jail_name))
+                sys.exit(msg(PROG_NAME, 'info', 'cyan', "aborted destruction of {}".format(jail_name)))
 
 
 def confirm_individual_destruction(jail_names):
@@ -147,7 +175,7 @@ def confirm_individual_destruction(jail_names):
         None
 
     """
-    single_destroy = click.confirm("Destroy them individually?", default=False)
+    single_destroy = click.confirm(msg(PROG_NAME, 'prompt', 'magenta', 'destroy them individually?'), default=False)
     if single_destroy:
         for jail in jail_names:
             destroy_jail_prompt(jail, abort_output=False)
@@ -163,22 +191,50 @@ def destroy_all_jails_prompt(jail_names):
         None
 
     """    
-    print("The following jails are allocated for destruction:") 
+    click.echo(msg(PROG_NAME, 'info', 'cyan', 'the following jails can be destroyed:'))
     for jail_name in jail_names:
-        print("    - {:^10}".format(jail_name))
-    destroy = click.confirm("Destroy all of them?", default=False)
+        click.echo("    - {:^10}".format(jail_name))
+    destroy = click.confirm(msg(PROG_NAME, 'prompt', 'magenta', 'destroy all of them?'), default=False)
     if destroy:
-        all_destroy = click.confirm(("[{}]: This will destroy ALL jail data for the above jails."
-        "Are you sure?".format(click.style("WARNING", fg='red'))), default=False)
+        all_destroy = click.confirm(msg(PROG_NAME, 'warning', 'yellow', 'this will destroy ALL data for the above jails. are you sure?'), default=False)
         if all_destroy:
             for jail_name in jail_names:
-                print("Destroying {}".format(jail_name))
-                #progress bar for jail destruction
+                click.echo(msg(PROG_NAME, 'info', 'cyan', "destroying {}".format(jail_name)))
                 try:
                     destroy_jail(jail_name)
-                except (InvalidJailName, CommandError) as err:
-                    sys.exit(err.message)
+                except (jd.InvalidJailName, jd.CommandError) as err:
+                    sys.exit(msg(PROG_NAME, 'error', 'red', err.message))
         else:
             confirm_individual_destruction(jail_names)
     else:
         confirm_individual_destruction(jail_names)
+
+
+def destroy_jail(jail_name):
+    """Destroys a jail.
+
+    Helper functions are called to destroy the jail. Assumes user is sure of destruction.
+
+    Args:
+        jail_name (str): the name of the jail that is to be destroyed
+
+    Returns:
+        None
+
+    Raises:
+        jailify.deletion.InvalidJailName: If ``jail_name`` is empty this exception is raised.
+    """
+    if not jail_name:
+        raise jd.InvalidJailName("jail name cannot be empty")
+    else:
+        click.echo(msg(PROG_NAME, 'info', 'cyan', "stopping {} jail".format(jail_name)))
+        jd.stop_jail(jail_name)
+
+        click.echo(msg(PROG_NAME, 'info', 'cyan', "destroying {} dataset".format(jail_name)))
+        jd.zfs_destroy(jail_name)
+
+        click.echo(msg(PROG_NAME, 'info', 'cyan', "removing /etc/fstab.{}".format(jail_name)))
+        jd.remove_fstab(jail_name)
+
+        click.echo(msg(PROG_NAME, 'info', 'cyan', 'modifying /etc/jail.conf'))
+        jd.edit_jailconf_file(jail_name)

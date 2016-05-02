@@ -21,27 +21,6 @@ class DeletionError(Exception):
 class InvalidJailName(DeletionError):
     pass
 
-def destroy_jail(jail_name):
-    """Destroys a jail.
-
-    Helper functions are called to destroy the jail. Assumes user is sure of destruction.
-
-    Args:
-        jail_name (str): the name of the jail that is to be destroyed
-
-    Returns:
-        None
-
-    Raises:
-        InvalidJailName: If ``jail_name`` is empty this exception is raised.
-    """
-    if not jail_name:
-        raise InvalidJailName("Error : jail name cannot be empty")
-    else:
-        stop_jail(jail_name)
-        zfs_destroy(jail_name)
-        remove_fstab(jail_name)
-        edit_jailconf_file(jail_name)
 
 def stop_jail(jail_name):
     """Stops the jail.
@@ -83,7 +62,6 @@ def remove_fstab(jail_name):
     Returns:
         None
     """
-    print("removing fstab")
     fstab_path = "/etc/fstab." + jail_name
     rm_fstab_cmd = ("rm", fstab_path)
     do_command(rm_fstab_cmd)
@@ -97,7 +75,6 @@ def edit_jailconf_file(jail_name):
     Returns:
         None
     """
-    print("editing jail.conf file")
 
     with open("/etc/jail.conf", "r") as jail_conf_file:
         jail_conf = jail_conf_file.read()
