@@ -25,6 +25,9 @@ class RegularExpressionError(CreationError):
 class InvalidJailNameError(CreationError):
     pass
 
+class IPAddressError(CreationError):
+    pass
+
 def get_interface():
     """Finds the correct interface.
 
@@ -121,7 +124,7 @@ def get_lowest_ip():
     for ip in ip_network:
         if not (str(ip) in ip_addrs):
             return str(ip)
-    raise ValueError('no ip addresses available in range {}'.format(ip_range))
+    raise IPAddressError('no ip addresses available in range {}'.format(ip_range))
 
 def add_entry(ip_addr, jail_name, interface):
     """Opens /etc/jail.conf and appends the file to include an entry for the new jail.
