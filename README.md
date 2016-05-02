@@ -3,7 +3,7 @@
 Create or destroy jails for senior project teams on our senior project jail
 host.
 
-# Dependencies
+# Preconditions
 1. `jailify` is dependent on a ZFS dataset configured as a base jail that can
     be cloned to create new jails. 
 2. `jailify` must have `sendmail` enabled in the jail. This change can be made
@@ -21,6 +21,8 @@ host.
    ``` 
    `<IP Range>` should be the acceptable IP addresses expressed in CIDR notation,
     such as: `10.10.1.128/25`.
+6. `jailify` must have `sudo` installed in the jail. This change can be made
+   in the base jail.
 
 # Installation
 To install `jailify` run the following command:
