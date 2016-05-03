@@ -62,7 +62,7 @@ def jailify_main(jail_directory):
             jc.start_jail(jail_name)
         else:
             raise jc.InvalidJailNameError("jail {} already exists".format(jail_name))
-    except (jc.InvalidJailNameError, jc.RegularExpressionError, CommandError) as err:
+    except (jc.InvalidJailNameError, jc.RegularExpressionError, jc.IPAddressError, CommandError) as err:
         sys.exit(msg(PROG_NAME, 'error', 'red', err.message))
    
     usernames = []
