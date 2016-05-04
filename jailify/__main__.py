@@ -36,7 +36,7 @@ def jailify_main(jail_directory):
 
     try:
         metadata = jm.get_metadata(file_type, jail_directory)
-    except (jm.FailedToExtractFile, jm.ExtraneousPublicKey, 
+    except (jm.FailedToExtractFile, jm.ExtraneousPublicKey,
             jm.InvalidJSONError, jm.ValidationError, jm.InvalidHostname,
             jm.InvalidMetadata, jm.InvalidFileType) as err:
         sys.exit(msg(PROG_NAME, 'error', 'red', err.message))
@@ -65,7 +65,7 @@ def jailify_main(jail_directory):
             raise jc.InvalidJailNameError("jail {} already exists".format(jail_name))
     except (jc.InvalidJailNameError, jc.RegularExpressionError, jc.IPAddressError, CommandError) as err:
         sys.exit(msg(PROG_NAME, 'error', 'red', err.message))
-   
+
     usernames = []
     user_gecos = []
     user_keys = []
@@ -101,7 +101,7 @@ def jailify_main(jail_directory):
 @click.argument('jail_name', required=False)
 def dejailify_main(jail_name):
     if jail_name:
-        confirmed_jail_name = find_jails(jail_name) 
+        confirmed_jail_name = find_jails(jail_name)
         destroy_jail_prompt(confirmed_jail_name, abort_output=False)
     else:
         jail_names = find_jails(jail_name=None, all_jails=True)
@@ -117,10 +117,10 @@ def find_jails(jail_name, all_jails=False, path_jails_conf="/etc/jail.conf"):
                              jails. If True find all jails, False find
                              only the specified jail name.
         path_jails_conf (str): The path to the location of the jail.conf.
-    
+
     Returns:
         jail_names (list): List of all jails that can be destroyed.
-        found_jail (str): A verified name of the jail to be destroyed. 
+        found_jail (str): A verified name of the jail to be destroyed.
     """
     found_jail = None
     with open(path_jails_conf, 'r') as jail_config:
@@ -143,7 +143,7 @@ def destroy_jail_prompt(jail_name, abort_output=True):
     Args:
         jail_name (str): Name of jail to be destroyed.
         abort_output (boolean): Whether or not abort the program after
-                                a No response. 
+                                a No response.
 
     Returns:
         None
@@ -192,7 +192,7 @@ def destroy_all_jails_prompt(jail_names):
     Returns:
         None
 
-    """    
+    """
     click.echo(msg(PROG_NAME, 'info', 'cyan', 'the following jails can be destroyed:'))
     for jail_name in jail_names:
         click.echo("    - {:^10}".format(jail_name))
