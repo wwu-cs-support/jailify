@@ -25,6 +25,7 @@ def root_check(func):
 
 @root_check
 @click.command()
+@click.version_option()
 @click.argument('jail_directory', type=click.Path(exists=True, readable=True))
 def jailify_main(jail_directory):
 
@@ -96,6 +97,7 @@ def jailify_main(jail_directory):
 
 @root_check
 @click.command()
+@click.version_option()
 @click.argument('jail_name', required=False)
 def dejailify_main(jail_name):
     if jail_name:
