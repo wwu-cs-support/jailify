@@ -23,10 +23,10 @@ def root_check(func):
     return _wrapper
 
 
-@click.version_option()
-@root_check
 @click.command()
 @click.argument('jail_directory', type=click.Path(exists=True, readable=True))
+@click.version_option()
+@root_check
 def jailify_main(jail_directory):
 
     try:
@@ -95,10 +95,10 @@ def jailify_main(jail_directory):
     click.echo(msg(PROG_NAME, 'info', 'cyan', "creating fallback snapshot".format(user)))
     create_snapshot(jail_name)
 
-@root_check
 @click.command()
-@click.version_option()
 @click.argument('jail_name', required=False)
+@click.version_option()
+@root_check
 def dejailify_main(jail_name):
     if jail_name:
         confirmed_jail_name = find_jails(jail_name)
