@@ -23,9 +23,9 @@ def root_check(func):
     return _wrapper
 
 
+@click.version_option()
 @root_check
 @click.command()
-@click.version_option()
 @click.argument('jail_directory', type=click.Path(exists=True, readable=True))
 def jailify_main(jail_directory):
 
