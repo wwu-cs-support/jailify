@@ -111,14 +111,15 @@ def get_lowest_ip():
         A string that is the next available ip address
 
     Raises:
-        ValueError: If no ip addresses are available, this exception is raised.
+        IPAddressError: If no ip addresses are available, this exception is raised.
+        IPAddressError: If no ip-range is specified in /etc/jail.conf, this exception is raised.
     """
     with open('/etc/jail.conf', 'r') as jail_config:
         jail_config = jail_config.read()
 
     ip_range = re.search("(?<=ip-range = )(.*)", jail_config)
     if not ip_range:
-        raise RegularExpressionError("host must specify acceptable range of IP addresses")
+        raise IPAddressError("host must specify acceptable range of IP addresses")
 
     ip_range = ip_range.group(0)
     ip_network = list(ipaddress.IPv4Network(ip_range).hosts())[2:]
