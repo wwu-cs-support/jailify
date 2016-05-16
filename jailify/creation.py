@@ -111,8 +111,8 @@ def get_lowest_ip():
         A string that is the next available ip address
 
     Raises:
-        IPAddressError: If no ip addresses are available, this exception is raised.
-        IPAddressError: If no ip-range is specified in /etc/jail.conf, this exception is raised.
+        IPAddressError: If no ip addresses are available or no ip-range is specified in
+        /etc/jail.conf, this exception is raised.
     """
     with open('/etc/jail.conf', 'r') as jail_config:
         jail_config = jail_config.read()
