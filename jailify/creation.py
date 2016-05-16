@@ -116,10 +116,13 @@ def get_lowest_ip():
     with open('/etc/jail.conf', 'r') as jail_config:
         jail_config = jail_config.read()
 
-    ip_addrs = re.findall('(?<=ip4.addr = )\"*([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})\"*;', jail_config)
     ip_range = re.search("(?<=ip-range = )(.*)", jail_config)
+    if not ip_range:
+        raise RegularExpressionError("host must specify acceptable range of IP addresses")
+
     ip_range = ip_range.group(0)
     ip_network = list(ipaddress.IPv4Network(ip_range).hosts())[2:]
+    ip_addrs = re.findall('(?<=ip4.addr = )\"*([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})\"*;', jail_config)
 
     for ip in ip_network:
         if not (str(ip) in ip_addrs):
