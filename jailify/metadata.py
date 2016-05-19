@@ -122,7 +122,8 @@ def extract_tar(tar_path, comp_type):
             for member in tf.getmembers():
                 paths.append(os.path.join(temp_dir, member.path))
                 tf.extract(member, path=temp_dir)
-            return paths[0]
+            metapath = paths[0]
+            return metapath if os.path.isdir(metapath) else os.path.dirname(metapath)
     except (FileNotFoundError, PermissionError, tarfile.TarError):
         raise FailedToExtractFile("{} does not exist, is not readable, or is malformed".format(tar_path))
 
