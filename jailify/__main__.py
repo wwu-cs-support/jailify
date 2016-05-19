@@ -43,6 +43,7 @@ def jailify_main(jail_directory):
 
     jail_name = metadata['hostname']
     jail_name = jail_name.replace('-', '_')
+    jail_name = jail_name.lower()
     click.echo(msg(PROG_NAME, 'info', 'cyan', "creating {} jail".format(jail_name)))
 
     try:

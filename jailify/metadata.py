@@ -87,7 +87,7 @@ def determine_file_type(file_name):
     else:
         magic_type = magic.from_file(file_name).decode('utf-8')
 
-        if magic_type == 'POSIX tar archive':
+        if 'POSIX tar archive' in magic_type:
             file_type = 'tar'
         elif magic_type[:5] == 'bzip2':
             file_type = 'bz2'
@@ -122,9 +122,10 @@ def extract_tar(tar_path, comp_type):
             for member in tf.getmembers():
                 paths.append(os.path.join(temp_dir, member.path))
                 tf.extract(member, path=temp_dir)
-            return os.path.dirname(paths[0])
+            metapath = paths[0]
+            return metapath if os.path.isdir(metapath) else os.path.dirname(metapath)
     except (FileNotFoundError, PermissionError, tarfile.TarError):
-        raise FailedToExtractFile("{} does not exist, is not readable, or is malformed".format(zip_path))
+        raise FailedToExtractFile("{} does not exist, is not readable, or is malformed".format(tar_path))
 
 
 ## EXTRACT_ZIP ##
