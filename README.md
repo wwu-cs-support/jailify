@@ -114,9 +114,9 @@ For example, `jailify` with no argument should look like:
 ```
 ***REMOVED***@***REMOVED***:~ % sudo dejailify
 The following jails are allocated for destruction:
-    - blueteam.sr***REMOVED***
-    - greenteam.sr***REMOVED***
-    - redteam.sr***REMOVED***
+    - blueteam.***REMOVED***
+    - greenteam.***REMOVED***
+    - redteam.***REMOVED***
 Destroy all of them? [y/N] n
 Destroy them individually? [y/N] y
 Destroy blueteam.***REMOVED***? [y/N] y
