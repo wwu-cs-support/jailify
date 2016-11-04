@@ -19,7 +19,7 @@ import mimetypes
 import subprocess
 from subprocess import DEVNULL, CalledProcessError
 
-REQUIRED_KEYS = ("projectName","client","hostname","facultyContact","client","teamMembers")
+REQUIRED_KEYS = ("projectName","client","hostname","facultyContact","teamMembers")
 REQUIRED_USER_KEYS = ("username","email","name")
 
 class ExtractionError(Exception):
