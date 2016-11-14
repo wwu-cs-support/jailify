@@ -159,7 +159,7 @@ def destroy_jail_prompt(jail_name, abort_output=True):
                 click.echo(msg(PROG_NAME, 'info', 'cyan', "destroying {}".format(jail_name)))
                 try:
                     destroy_jail(jail_name)
-                except (jd.InvalidJailName, jd.CommandError) as err:
+                except (jd.InvalidJailName, CommandError) as err:
                     sys.exit(msg(PROG_NAME, 'error', 'red', err.message))
             if abort_output:
                 sys.exit(msg(PROG_NAME, 'info', 'cyan', "aborted destruction of {}".format(jail_name)))
@@ -205,7 +205,7 @@ def destroy_all_jails_prompt(jail_names):
                 click.echo(msg(PROG_NAME, 'info', 'cyan', "destroying {}".format(jail_name)))
                 try:
                     destroy_jail(jail_name)
-                except (jd.InvalidJailName, jd.CommandError) as err:
+                except (jd.InvalidJailName, CommandError) as err:
                     sys.exit(msg(PROG_NAME, 'error', 'red', err.message))
         else:
             confirm_individual_destruction(jail_names)
