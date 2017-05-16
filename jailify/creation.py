@@ -75,7 +75,7 @@ def get_latest_snapshot():
     """Finds the latest snapshot.
 
     Finds the latest snapshot by using a regular expression on the output of calling
-    'zfs list -t snapshot'. Assumes base jail name is .base10.3x64.
+    'zfs list -t snapshot'. Assumes base jail name is .base10.2x64.
 
     Args:
         None
@@ -89,7 +89,7 @@ def get_latest_snapshot():
     cmd = ["zfs", "list", "-t", "snapshot"]
     zfs_output = do_command_with_return(cmd)
 
-    snapshot_list = re.findall('(?<=.base10.3x64@)\S*', str(zfs_output))
+    snapshot_list = re.findall('(?<=.base10.2x64@)\S*', str(zfs_output))
     if not snapshot_list:
         raise RegularExpressionError("no snapshots found")
     else:
@@ -174,7 +174,7 @@ def clone_base_jail(snapshot, jail_name):
         None
     """
     path = "zroot/jail/"
-    jail_version = ".base10.3x64"
+    jail_version = ".base10.2x64"
     snapshot_path = "{}{}@{}".format(path, jail_version, snapshot)
     jail_path = os.path.join(path, jail_name)
 
