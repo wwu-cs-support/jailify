@@ -85,15 +85,16 @@ def determine_file_type(file_name):
     if os.path.isdir(file_name):
         file_type = 'dir'
     else:
-        magic_type = magic.from_file(file_name).decode('utf-8')
+        fmag = magic.Magic(magic.MAGIC_NONE)
+        magic_type = fmag.from_file(file_name)
 
-        if 'POSIX tar archive' in magic_type:
+        if magic_type[:5] == 'POSIX':
             file_type = 'tar'
         elif magic_type[:5] == 'bzip2':
             file_type = 'bz2'
         elif magic_type[:4] == 'gzip':
             file_type = 'gz'
-        elif zipfile.is_zipfile(file_name):
+        elif magic_type[:3] == 'Zip':
             file_type = 'zip'
         elif magic_type[:2] == 'XZ':
             file_type = 'xz'

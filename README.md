@@ -11,7 +11,7 @@ host.
 3. `jailify` must have `/usr/share/skel` formatted with an added `.ssh/` and an
    `authorized_keys` file for creation of user accounts to work. This change 
    can also be made in the base jail.
-4. `jailify` also is dependent on `python3` being installed.
+4. `jailify` is dependent on `python3` being installed.
 5. The host must specify an acceptable range of IP addresses for the jails to
    use in `/etc/jail.conf`. You may put this comment anywhere in
    `/etc/jail.conf`. However, we suggest you place it after the `#DEFAULTS`
@@ -54,12 +54,12 @@ Here's example of that JSON file with all required fields
     {
       "username": "***REMOVED***",
       "name": "***REMOVED***",
-      "email": "***REMOVED***@students.wwu.edu"
+      "email": "***REMOVED***@wwu.edu"
     },
     {
       "username": "***REMOVED***",
       "name": "***REMOVED***",
-      "email": "***REMOVED***@students.wwu.edu"
+      "email": "***REMOVED***@wwu.edu"
     },
     {
       "username": "***REMOVED***",
@@ -69,7 +69,7 @@ Here's example of that JSON file with all required fields
     {
       "username": "***REMOVED***",
       "name": "***REMOVED***",
-      "email": "***REMOVED***@students.wwu.edu"
+      "email": "***REMOVED***@wwu.edu"
     }
   ]
 }
@@ -84,8 +84,7 @@ or
 ```
 ***REMOVED***@***REMOVED***:~ % sudo jailify ./blueteam
 ```
-where the directory structure of `greenteam.tgz` or `blueteam` is
-something like
+where the directory structure of `greenteam.tgz` or `blueteam` looks like
 ```
 greenteam
 ├── ***REMOVED***.pub
