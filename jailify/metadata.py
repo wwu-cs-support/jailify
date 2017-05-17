@@ -239,7 +239,7 @@ def build_metadata(directory):
                         member['publicKey'] = pub_file.read().rstrip('\n')
 
                         if 'PRIVATE KEY' in member['publicKey']:
-                            raise ValidationError("found private key for {}".format(username)) 
+                            raise ValidationError("found private key for {} (╯°□°）╯︵ ┻━┻".format(username))
                 except FileNotFoundError:
                     raise FailedToExtractFile("missing public key for {}".format(username))
 
