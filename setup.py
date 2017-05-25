@@ -4,7 +4,7 @@ requires = ["click", "python-magic"]
 
 setup(
     name='jailify',
-    version='1.0.5',
+    version='1.0.6',
     description='Create and delete senior project jails',
     author='CS Support',
     author_email='cs.support@wwu.edu',
