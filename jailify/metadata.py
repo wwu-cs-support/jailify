@@ -17,7 +17,6 @@ import os.path
 import tempfile
 import mimetypes
 import subprocess
-from jailify.util import do_command
 from subprocess import DEVNULL, CalledProcessError
 
 REQUIRED_KEYS = ("projectName","client","hostname","facultyContact","teamMembers")
@@ -129,7 +128,7 @@ def extract_tar(tar_path, comp_type):
                 return metapath if os.path.isdir(metapath) else os.path.dirname(metapath)
         elif comp_type is "gz":
             cmd = ["tar", "-xzvf", tar_path, "-C", temp_dir]
-            do_command(cmd)
+            subprocess.run(cmd, stdout=DEVNULL, stderr=DEVNULL, check=True)
             return os.path.join(temp_dir, tar_path.split('.')[0])
         else:
             raise FailedToExtractFile("{} is not readable".format(tar_path))
