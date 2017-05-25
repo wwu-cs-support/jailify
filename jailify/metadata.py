@@ -17,6 +17,7 @@ import os.path
 import tempfile
 import mimetypes
 import subprocess
+from jailify.util import do_command
 from subprocess import DEVNULL, CalledProcessError
 
 REQUIRED_KEYS = ("projectName","client","hostname","facultyContact","teamMembers")
@@ -118,13 +119,20 @@ def extract_tar(tar_path, comp_type):
     """
     temp_dir = tempfile.mkdtemp()
     try:
-        with tarfile.open(tar_path, 'r{}'.format(":" + comp_type if comp_type in ("bz2", "gz", "xz") else "")) as tf:
-            paths = []
-            for member in tf.getmembers():
-                paths.append(os.path.join(temp_dir, member.path))
-                tf.extract(member, path=temp_dir)
-            metapath = paths[0]
-            return metapath if os.path.isdir(metapath) else os.path.dirname(metapath)
+        if tarfile.is_tarfile(tar_path):
+            with tarfile.open(tar_path, 'r{}'.format(":" + comp_type if comp_type in ("bz2", "gz", "xz") else "")) as tf:
+                paths = []
+                for member in tf.getmembers():
+                    paths.append(os.path.join(temp_dir, member.path))
+                    tf.extract(member, path=temp_dir)
+                metapath = paths[0]
+                return metapath if os.path.isdir(metapath) else os.path.dirname(metapath)
+        elif comp_type is "gz":
+            cmd = ["tar", "-xzvf", tar_path, "-C", temp_dir]
+            do_command(cmd)
+            return os.path.join(temp_dir, tar_path.split('.')[0])
+        else:
+            raise FailedToExtractFile("{} is not readable".format(tar_path))
     except (FileNotFoundError, PermissionError, tarfile.TarError):
         raise FailedToExtractFile("{} does not exist, is not readable, or is malformed".format(tar_path))
 
