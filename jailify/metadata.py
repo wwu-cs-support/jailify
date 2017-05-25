@@ -134,7 +134,7 @@ def extract_tar(tar_path, comp_type):
         else:
             raise FailedToExtractFile("{} is not readable".format(tar_path))
     except (FileNotFoundError, PermissionError, tarfile.TarError):
-        raise FailedToExtractFile("{} does not exist, is not readable, or is malformed".format(tar_path))
+        raise FailedToExtractFile("{} does not exist, or is malformed".format(tar_path))
 
 
 ## EXTRACT_ZIP ##
