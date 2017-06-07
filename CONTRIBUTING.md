@@ -117,11 +117,11 @@ guidelines to ensure coherence throughout the application.
 ## Shout-outs
 - Much thanks to [Nicolas Gallagher] for his generic [issue guidelines].
 
-[repo]: https://gitlab.***REMOVED***/cs-support/adctl
-[merge request]: https://gitlab.***REMOVED***/help/workflow/forking_workflow.md#merging-upstream
+[repo]: https://gitlab.cs.wwu.edu/cs-support/adctl
+[merge request]: https://gitlab.cs.wwu.edu/help/workflow/forking_workflow.md#merging-upstream
 [GitLab Flow]: http://doc.gitlab.com/ee/workflow/gitlab_flow.html
 [PEP8]: https://www.python.org/dev/peps/pep-0008/
-[forking]: https://gitlab.***REMOVED***/help/workflow/forking_workflow.md
+[forking]: https://gitlab.cs.wwu.edu/help/workflow/forking_workflow.md
 [topic branch]: https://git-scm.com/book/en/v2/Git-Branching-Branching-Workflows#Topic-Branches
 [Nicolas Gallagher]: http://nicolasgallagher.com/
 [issue guidelines]: https://github.com/necolas/issue-guidelines

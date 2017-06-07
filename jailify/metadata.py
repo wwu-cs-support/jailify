@@ -1,4 +1,4 @@
-#***REMOVED*** | ***REMOVED***@wwu.edu | 04 March 2016
+#Sophia Anderson | ander569@wwu.edu | 04 March 2016
 #
 #    The purpose of this program is to extract data from a given tarball or
 #  directory. It will extract said data package, create a dictionary from the

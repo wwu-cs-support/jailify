@@ -27,7 +27,7 @@ host.
 # Installation
 To install `jailify` run the following command:
 ```
-pip install git+https://gitlab.***REMOVED***/cs-support/jailify.git@master
+pip install git+https://github.com/wwu-cs-support/jailify.git@master
 ```
 
 ## `jailify`
@@ -48,28 +48,28 @@ Here's example of that JSON file with all required fields
 {
   "projectName": "Green Team",
   "hostname": "greenteam",
-  "facultyContact": "***REMOVED***",
+  "facultyContact": "Jane Smith",
   "client": "CS Support",
   "teamMembers": [
     {
-      "username": "***REMOVED***",
-      "name": "***REMOVED***",
-      "email": "***REMOVED***@wwu.edu"
+      "username": "rossb",
+      "name": "Bob Ross",
+      "email": "rossb@example.com"
     },
     {
-      "username": "***REMOVED***",
-      "name": "***REMOVED***",
-      "email": "***REMOVED***@wwu.edu"
+      "username": "doej",
+      "name": "Jane Doe",
+      "email": "doej@example.com"
     },
     {
-      "username": "***REMOVED***",
-      "name": "***REMOVED***",
-      "email": "***REMOVED***"
+      "username": "cohenh",
+      "name": "Harriet Cohen",
+      "email": "cohenh@example.com"
     },
     {
-      "username": "***REMOVED***",
-      "name": "***REMOVED***",
-      "email": "***REMOVED***@wwu.edu"
+      "username": "obamab",
+      "name": "Barack Obama",
+      "email": "obamab@example.com"
     }
   ]
 }
@@ -78,20 +78,20 @@ Here's example of that JSON file with all required fields
 ### Example Usage
 Example usage of `jailify` might look like
 ```
-***REMOVED***@***REMOVED***:~ % sudo jailify ./greenteam.tgz
+user@jailhost:~ % sudo jailify ./greenteam.tgz
 ```
 or
 ```
-***REMOVED***@***REMOVED***:~ % sudo jailify ./blueteam
+user@jailhost:~ % sudo jailify ./blueteam
 ```
 where the directory structure of `greenteam.tgz` or `blueteam` looks like
 ```
 greenteam
-├── ***REMOVED***.pub
-├── ***REMOVED***.pub
+├── rossb.pub
+├── doe.pub
 ├── metadata.json
-├── ***REMOVED***.pub
-└── ***REMOVED***.pub
+├── cohenh.pub
+└── obamab.pub
 ```
 
 ## `dejailify`
@@ -111,25 +111,25 @@ allocated for destruction.
 
 For example, `jailify` with no argument should look like:
 ```
-***REMOVED***@***REMOVED***:~ % sudo dejailify
+user@jailhost:~ % sudo dejailify
 The following jails are allocated for destruction:
-    - blueteam.***REMOVED***
-    - greenteam.***REMOVED***
-    - redteam.***REMOVED***
+    - blueteam.generic-domain
+    - greenteam.generic-domain
+    - redteam.generic-domain
 Destroy all of them? [y/N] n
 Destroy them individually? [y/N] y
-Destroy blueteam.***REMOVED***? [y/N] y
-[WARNING]: This will destroy ALL jail data for blueteam.***REMOVED***. Are you sure? [y/N] y
-Destroying blueteam.***REMOVED***... done.
-Destroy greenteam.***REMOVED***? [y/N] n
-Destroy redteam.***REMOVED***? [y/N] n
-***REMOVED***@***REMOVED***:~ %
+Destroy blueteam.generic-domain? [y/N] y
+[WARNING]: This will destroy ALL jail data for blueteam.generic-domain. Are you sure? [y/N] y
+Destroying blueteam... done.
+Destroy greenteam? [y/N] n
+Destroy redteam? [y/N] n
+user@jailhost:~ %
 ```
 With the `team_name` argument `dejailify` might look like:
 ```
-***REMOVED***@***REMOVED***:~ % sudo dejailify redteam
-Destroy redteam.***REMOVED***? [y/N] y
-[WARNING]: This will destroy ALL jail data for redteam.***REMOVED***. Are you sure? [y/N] y
-Destroying redteam.***REMOVED***... done.
-***REMOVED***@***REMOVED***.***REMOVED***:~ %
+user@jailhost:~ % sudo dejailify redteam
+Destroy redteam.generic-domain? [y/N] y
+[WARNING]: This will destroy ALL jail data for redteam.generic-domain. Are you sure? [y/N] y
+Destroying redteam.generic-domain... done.
+user@jailhost.generic-domain:~ %
 ```
